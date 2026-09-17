@@ -1,0 +1,11 @@
+{
+  "name": "local-loom-community",
+  "version": "0.6.0-beta.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "test:companion": "LOCAL_LOOM_EXTENSION_ID=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa python3 -m unittest discover -s tests -p 'test_*.py'",
+    "check": "node --check extension/service-worker.js && node --check extension/recorder-core.js && node --check extension/recorder.js && node --check extension/companion-client.js && node --check extension/camera-compositor.js && node --check extension/camera-worker.js && node --check extension/display-capture.js && node --check extension/save-recording.js && node --check extension/popup.js && node --check extension/camera-orb.js && node --check extension/edit-model.js && python3 -m py_compile companion/*.py"
+  }
+}

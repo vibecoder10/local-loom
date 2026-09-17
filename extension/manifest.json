@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Local Loom",
+  "version": "0.6.0",
+  "minimum_chrome_version": "116",
+  "description": "Local screen and webcam recording, MP4/WebM downloads, private transcripts and spoken-cut editing.",
+  "action": {
+    "default_title": "Open Local Loom",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  },
+  "host_permissions": [
+    "http://127.0.0.1/*"
+  ],
+  "permissions": [
+    "desktopCapture",
+    "downloads"
+  ],
+  "commands": {
+    "mark-mistake": {
+      "suggested_key": { "default": "Ctrl+Shift+X", "mac": "Command+Shift+X" },
+      "description": "Mark a Local Loom mistake"
+    }
+  }
+}

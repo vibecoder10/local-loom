@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Local Loom Recorder</title>
+    <link rel="stylesheet" href="recorder.css">
+  </head>
+  <body>
+    <main class="recorder-shell">
+      <header class="masthead">
+        <div class="mark" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div>
+          <p class="eyebrow">LOCAL CAPTURE</p>
+          <h1>Recorder</h1>
+        </div>
+        <div class="status-pill" aria-label="Recorder status"><span class="status-dot"></span><span id="status">Ready to record</span></div>
+      </header>
+
+      <section class="control-card" aria-labelledby="recording-options-title">
+        <div class="card-heading">
+          <div>
+            <p class="eyebrow">CAPTURE SETTINGS</p>
+            <h2 id="recording-options-title">Choose what to include</h2>
+          </div>
+          <output id="timer" class="timer" aria-live="off" aria-label="Elapsed recording time">00:00</output>
+        </div>
+        <p class="help">Start, allow camera/microphone if asked, then choose a tab, window, or screen. Recording begins after Share. Stop opens Save As.</p>
+        <label class="format-row" for="format">
+          <span class="toggle-copy"><strong>Recording format</strong><small id="format-help">Checking MP4 support in this browser…</small></span>
+          <select id="format" aria-describedby="format-help">
+            <option value="mp4">MP4</option>
+            <option value="webm" selected>WebM</option>
+          </select>
+        </label>
+        <fieldset class="toggles">
+          <legend class="sr-only">Audio options</legend>
+          <label class="toggle-row" for="microphone">
+            <span class="toggle-copy"><strong>Microphone</strong><small>Include your voice in the recording</small></span>
+            <span class="toggle"><input id="microphone" type="checkbox" checked><span aria-hidden="true"></span></span>
+          </label>
+          <label class="toggle-row" for="shared-audio">
+            <span class="toggle-copy"><strong>Shared audio</strong><small>Include audio offered by the selected tab or screen</small></span>
+            <span class="toggle"><input id="shared-audio" type="checkbox" checked><span aria-hidden="true"></span></span>
+          </label>
+        </fieldset>
+        <label class="toggle-row camera-toggle" for="camera">
+          <span class="toggle-copy"><strong>Camera overlay</strong><small>Record your webcam inside the selected screen capture</small></span>
+          <span class="toggle"><input id="camera" type="checkbox" checked><span aria-hidden="true"></span></span>
+        </label>
+        <div class="orb-controls"><button id="show-orb" class="button button-secondary" type="button">Show camera orb</button><p id="orb-help">Float your camera above other tabs and apps. Drag the window to your corner; closing it keeps recording.</p></div>
+          <section id="camera-options" class="camera-options" aria-labelledby="camera-options-title">
+          <div class="subheading"><h3 id="camera-options-title">Camera framing</h3><span>Saved into the recording</span></div>
+          <div class="camera-fields">
+            <label>Shape <select id="camera-shape"><option value="circle" selected>Circle</option><option value="square">Square</option></select></label>
+            <label>Size <input id="camera-size" type="range" min="0.12" max="0.45" step="0.01" value="0.24"><output id="camera-size-value">24%</output></label>
+            <label class="camera-mirror" for="camera-mirror"><input id="camera-mirror" type="checkbox" checked> Mirror camera</label>
+          </div>
+          <div class="corner-controls" aria-label="Camera position">
+            <button type="button" class="corner-button" data-corner="top-left">Top left</button>
+            <button type="button" class="corner-button" data-corner="top-right">Top right</button>
+            <button type="button" class="corner-button" data-corner="bottom-left">Bottom left</button>
+            <button type="button" class="corner-button" data-corner="bottom-right">Bottom right</button>
+          </div>
+        </section>
+        <div class="messages" aria-live="polite">
+          <p id="warning" class="message warning" hidden></p>
+          <p id="error" class="message error" role="alert" hidden></p>
+        </div>
+        <div class="actions" aria-label="Recording controls">
+          <button id="start" class="button button-primary" type="button"><span aria-hidden="true">●</span> Start recording</button>
+          <button id="mark-mistake" class="button button-secondary" type="button" disabled>Mark mistake</button>
+          <button id="pause" class="button button-secondary" type="button" disabled>Pause</button>
+          <button id="stop" class="button button-danger" type="button" disabled><span aria-hidden="true">■</span> Stop</button>
+        </div>
+      </section>
+
+      <section id="live-preview-card" class="live-preview-card" aria-labelledby="live-preview-title" hidden>
+        <div class="card-heading compact-heading">
+          <div><p class="eyebrow">LIVE COMPOSITE</p><h2 id="live-preview-title">Camera placement</h2></div>
+          <span class="preview-note">Preview-based positioning</span>
+        </div>
+        <p class="live-help">Drag your camera in this preview. Its position is saved in the recording; return here using the toolbar button to reposition while recording.</p>
+        <div id="live-preview-stage" class="live-preview-stage">
+          <video id="live-preview" muted playsinline aria-label="Live composited recording preview"></video>
+          <button id="camera-handle" class="camera-handle" type="button" aria-label="Move camera overlay with arrow keys. Hold Shift for larger moves." hidden></button>
+        </div>
+      </section>
+
+      <section class="preview-card" aria-labelledby="preview-title">
+        <div class="card-heading compact-heading">
+          <div><p class="eyebrow">ORIGINAL — UNCUT</p><h2 id="preview-title">Recording preview</h2></div>
+          <a id="download" class="download" hidden download><span id="download-label">Save original as…</span> <span aria-hidden="true">↓</span></a>
+        </div>
+        <div id="preview-empty" class="preview-empty">
+          <span class="empty-icon" aria-hidden="true">▣</span>
+          <p>Your finished recording will appear here.</p>
+        </div>
+        <p id="save-status" role="status">When recording stops, choose where to save your video.</p>
+        <label>Open saved video <input id="import-video-file" type="file" accept="video/mp4,video/webm"></label>
+        <p id="marker-status" role="status" hidden></p>
+        <p id="shortcut-status" role="status">Shortcut checking…</p>
+        <video id="preview" controls playsinline hidden aria-label="Finished recording preview"></video>
+      </section>
+
+      <section id="editing-panel" class="editing-panel" aria-labelledby="editing-title">
+        <div class="card-heading compact-heading">
+          <div><p class="eyebrow">LOCAL COMPANION</p><h2 id="editing-title">Transcript &amp; edits</h2></div>
+          <span id="companion-status" class="connection" data-state="checking" aria-live="polite">Checking local helper…</span>
+        </div>
+        <p class="editing-help">Recognition runs locally after Stop. Say <strong>CUT</strong> after a mistake, then repeat the sentence. Review every suggested cut before exporting.</p>
+        <label class="auto-process" for="auto-process">
+          <input id="auto-process" type="checkbox" checked>
+          <span>Prepare a transcript automatically after each recording</span>
+        </label>
+        <div class="companion-actions">
+          <button id="retry-companion" class="button button-secondary" type="button" disabled>Retry local helper</button>
+          <p id="processing-status" class="processing-status" aria-live="polite">Save a recording to prepare a transcript and edited MP4.</p>
+        </div>
+        <div id="transcript-wrap" class="transcript-wrap" hidden>
+          <div class="subheading"><h3>Original transcript</h3><span>Original timing</span></div>
+          <pre id="transcript" class="transcript" tabindex="0"></pre>
+          <div class="artifact-links">
+            <a id="download-transcript" class="download" hidden download>Download original TXT <span aria-hidden="true">↓</span></a>
+            <a id="download-srt" class="download" hidden download>Download original SRT <span aria-hidden="true">↓</span></a>
+          </div>
+        </div>
+        <div id="cuts-wrap" class="cuts-wrap" hidden>
+          <div class="subheading"><h3>Suggested removals</h3><span>Adjust seconds or uncheck any cut</span></div>
+          <div id="cut-list" class="cut-list"></div>
+          <button id="apply-cuts" class="button button-primary" type="button" disabled>Render edits</button>
+          <div class="manual-edit"><label>Keep from <input id="trim-start" type="number" min="0" step="0.01" value="0"></label><label>Keep to <input id="trim-end" type="number" min="0" step="0.01"></label><label>Start <input id="manual-start" type="number" min="0" step="0.01"></label><button id="set-start" type="button">Set at playhead</button><label>End <input id="manual-end" type="number" min="0" step="0.01"></label><button id="set-end" type="button">Set at playhead</button><button id="add-removal" type="button">Add removal</button><button id="undo-edit" type="button">Undo last edit</button><p id="edit-summary"></p></div>
+        </div>
+        <div id="edited-wrap" class="edited-wrap" hidden>
+          <div class="subheading"><h3>Edited MP4</h3><span>Original recording is unchanged</span></div>
+          <video id="edited-preview" controls playsinline hidden aria-label="Edited recording preview"></video>
+          <a id="download-edited" class="download" hidden download>Save edited MP4 as… <span aria-hidden="true">↓</span></a>
+        </div>
+      </section>
+    </main>
+    <div id="recording-bar" class="recording-bar" hidden><strong id="bar-status">Recording</strong><button id="bar-mark" class="button button-secondary" type="button">Mark mistake</button><button id="bar-stop" class="button button-danger" type="button">■ Stop &amp; save</button></div>
+  <script type="module" src="recorder.js"></script>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Local Loom</title><link rel="stylesheet" href="popup.css"></head><body><main>
+  <header><span class="mark" aria-hidden="true">●</span><div><p>LOCAL LOOM</p><h1>Capture</h1></div></header>
+  <p id="popup-status" class="status" aria-live="polite">Checking recorder…</p>
+  <fieldset><legend>Include</legend><label><input id="popup-camera" type="checkbox" checked> Camera overlay</label><label><input id="popup-microphone" type="checkbox" checked> Microphone</label><label><input id="popup-shared-audio" type="checkbox" checked> Shared audio</label></fieldset>
+  <div class="actions"><button id="popup-start" class="primary" type="button">Start recording</button><button id="popup-stop" class="secondary" type="button" disabled>Stop recording</button></div>
+  <button id="popup-mark" class="secondary marker" type="button" disabled>Mark mistake</button>
+  <button id="popup-orb" class="link-button" type="button">Show camera orb</button>
+  <button id="popup-open" class="link-button" type="button">Open recorder</button><p id="popup-error" class="error" role="alert" hidden></p>
+</main><script type="module" src="popup.js"></script></body></html>
