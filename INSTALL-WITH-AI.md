@@ -17,11 +17,11 @@ Paste this prompt:
 5. Run the installer from this package root, replacing every placeholder with the recipient's actual absolute paths:
 
 ```sh
-LOCAL_LOOM_EXTENSION_ID="ACTUAL_CHROME_EXTENSION_ID" \\
-LOCAL_LOOM_FFMPEG="/absolute/path/to/ffmpeg" \\
-LOCAL_LOOM_FFPROBE="/absolute/path/to/ffprobe" \\
-LOCAL_LOOM_WHISPER="/absolute/path/to/whisper-cli" \\
-LOCAL_LOOM_WHISPER_MODEL="/absolute/path/to/english-model.bin" \\
+LOCAL_LOOM_EXTENSION_ID="ACTUAL_CHROME_EXTENSION_ID" \
+LOCAL_LOOM_FFMPEG="/absolute/path/to/ffmpeg" \
+LOCAL_LOOM_FFPROBE="/absolute/path/to/ffprobe" \
+LOCAL_LOOM_WHISPER="/absolute/path/to/whisper-cli" \
+LOCAL_LOOM_WHISPER_MODEL="/absolute/path/to/english-model.bin" \
 python3 tools/install-companion.py
 ```
 
