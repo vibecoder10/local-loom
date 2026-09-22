@@ -2,7 +2,7 @@
 
 Local Loom is a Mac beta Chrome extension for screen and webcam recording. It downloads the original recording directly from Chrome and can use an optional loopback-only helper to create private transcripts and reviewable MP4 edits.
 
-The current beta release is available from [the latest release](https://github.com/vibecoder10/local-loom/releases/latest).
+The current beta release is [v0.7.0-beta.1](https://github.com/vibecoder10/local-loom/releases/tag/v0.7.0-beta.1) (all releases: [Releases](https://github.com/vibecoder10/local-loom/releases)). GitHub's "latest" shortcut only resolves for non-prerelease releases, so it 404s while every release here is marked beta - link to the specific tag or the releases list instead.
 
 ## Features
 
