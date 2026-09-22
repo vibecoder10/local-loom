@@ -1,0 +1,303 @@
+<!--
+  Hyperframes  -  D3 / Canvas Hero Pattern
+  --------------------------------------
+
+  WHEN TO USE: porting any D3 / canvas-driven hero element (rotating globe,
+  network graph, particle field, voronoi, etc.) into a Hyperframes composition.
+
+  WHAT IT GIVES YOU:
+  - Hex-mesh background (always-on, deterministic)
+  - Wireframe + dotted-halftone rotating globe (D3 geoOrthographic)
+  - Data-asset pattern (embedded GeoJSON via assets/land.js, no fetch)
+  - Time-driven rendering (no requestAnimationFrame, no d3.timer)
+  - GSAP timeline scaffolding
+
+  HOW TO ADAPT:
+  1. Copy this file into your project folder as index.html.
+  2. Drop your data file into assets/ (see recipes/embedded-data.md for the
+     wrapping recipe).
+  3. Replace drawGlobe() with your own draw routine. Keep the `time` param  - 
+     that's what makes the render deterministic.
+  4. Update data-duration on the root + every clip when you change scene timing.
+  5. Run `npx hyperframes@latest lint`  -  must be 0 errors.
+
+  REFERENCE: the globe port described in reference/21st-dev-port-guide.md
+
+  CRITICAL RULES (full list in SKILL.md):
+  - GSAP must NOT animate .clip elements directly. Animate the inner wrapper.
+  - No fetch / Math.random / Date.now / requestAnimationFrame at render time.
+    Everything must be a pure function of tl.time().
+  - Visually-overlapping elements need separate tracks.
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <!-- Embedded data  -  copy assets/ne_110m_land.js from this skill into your project's assets/ -->
+    <script src="assets/ne_110m_land.js"></script>
+    <style>
+      :root {
+        --bg: #000; --surface: #0a0a0a; --card: #14161f;
+        --border: #1f2230; --border-2: #2e3244;
+        --text: #e0e0e0; --text-paper: #f1ece0; --text-dim: #888;
+        --accent: #ff6b1a; --teal: #50e3c2; --amber: #f5a623;
+        --violet: #8b5cf6; --cyan: #22d3ee; --pink: #f472b6;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 1920px; height: 1080px; overflow: hidden;
+        background: var(--bg); color: var(--text);
+        font-family: 'Outfit', sans-serif;
+      }
+      #root { position: relative; width: 1920px; height: 1080px; }
+      #hexBg { position: absolute; inset: 0; pointer-events: none; }
+      .vignette {
+        position: absolute; inset: 0; pointer-events: none;
+        background:
+          radial-gradient(800px at 14% 8%, rgba(255, 107, 26, 0.05), transparent 60%),
+          radial-gradient(900px at 88% 92%, rgba(34, 211, 238, 0.06), transparent 60%);
+      }
+      /* Globe wrapper  -  GSAP animates THIS. Canvas inside is the actual draw surface. */
+      #globe-wrap {
+        position: absolute;
+        left: 510px; top: 90px;
+        width: 900px; height: 900px;
+        transform-origin: 50% 50%;
+      }
+      #globe-canvas { width: 900px; height: 900px; display: block; }
+      .watermark {
+        position: absolute; left: 36px; bottom: 36px;
+        display: flex; align-items: center; gap: 12px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 16px; font-weight: 700; letter-spacing: 0.18em;
+        color: var(--text-dim); text-transform: uppercase;
+        padding: 12px 18px; background: rgba(0, 0, 0, 0.45);
+        border: 1px solid var(--border); border-radius: 100px;
+      }
+      .watermark .hex { width: 22px; height: 22px; }
+      .watermark .ROBO { color: var(--text); font-weight: 800; }
+      .watermark .LABS { color: var(--text-dim); font-weight: 300; }
+    </style>
+  </head>
+  <body>
+    <div id="root"
+      data-composition-id="main"
+      data-start="0" data-duration="12"
+      data-width="1920" data-height="1080"
+    >
+      <canvas id="hexBg" class="clip"
+        data-start="0" data-duration="12" data-track-index="0"
+        width="1920" height="1080"></canvas>
+
+      <div id="vignette" class="vignette clip"
+        data-start="0" data-duration="12" data-track-index="1"></div>
+
+      <div id="clip-globe" class="clip"
+        data-start="0" data-duration="12" data-track-index="2">
+        <div id="globe-wrap">
+          <canvas id="globe-canvas" width="900" height="900"></canvas>
+        </div>
+      </div>
+
+      <!-- Add your scene clips here (tracks 3+). -->
+
+      <div id="watermark" class="watermark clip"
+        data-start="0" data-duration="12" data-track-index="9">
+        <svg class="hex" viewBox="0 0 100 100">
+          <polygon points="50,5 93,28 93,72 50,95 7,72 7,28" fill="#ff6b1a" />
+        </svg>
+        <span><span class="ROBO">ROBO</span><span class="LABS">LABS</span></span>
+      </div>
+    </div>
+
+    <script>
+      /* HEX MESH  -  deterministic, time-driven background */
+      const hexCanvas = document.getElementById('hexBg');
+      const hexCtx = hexCanvas.getContext('2d');
+      const W = 1920, H = 1080;
+      function drawHex(time) {
+        hexCtx.clearRect(0, 0, W, H);
+        const cell = 28;
+        const hexW = cell * Math.sqrt(3);
+        const hexH = cell * 1.5;
+        hexCtx.save();
+        hexCtx.translate(W / 2, H / 2);
+        hexCtx.rotate(time * 0.012);
+        hexCtx.translate(-W / 2, -H / 2);
+        for (let y = -hexH; y < H + hexH; y += hexH) {
+          for (let x = -hexW; x < W + hexW; x += hexW) {
+            const off = (Math.round(y / hexH) % 2) * (hexW / 2);
+            const cx = x + off, cy = y;
+            const dx = (cx - W / 2) / W, dy = (cy - H / 2) / H;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            const fade = Math.max(0, 1 - Math.pow(d * 1.5, 2));
+            hexCtx.strokeStyle = `rgba(255,255,255,${0.085 * fade})`;
+            hexCtx.lineWidth = 0.8;
+            hexCtx.beginPath();
+            for (let i = 0; i < 6; i++) {
+              const ang = (Math.PI / 3) * i + Math.PI / 6;
+              const px = cx + cell * Math.cos(ang);
+              const py = cy + cell * Math.sin(ang);
+              if (i === 0) hexCtx.moveTo(px, py); else hexCtx.lineTo(px, py);
+            }
+            hexCtx.closePath(); hexCtx.stroke();
+          }
+        }
+        hexCtx.restore();
+      }
+      drawHex(0);
+
+      /* GLOBE  -  wireframe + dotted halftone, D3 geoOrthographic.
+         Adapter pattern (see SKILL.md → Porting external components):
+           1. Strip React wrapper  -  plain functions only
+           2. Replace fetch() with embedded window.NE_LAND
+           3. Replace d3.timer / requestAnimationFrame with tl.eventCallback('onUpdate')
+           4. Strip mouse/scroll handlers  -  dead weight for video
+           5. Pre-compute deterministic loops at script load (ALL_DOTS) */
+      const globeCanvas = document.getElementById('globe-canvas');
+      const gctx = globeCanvas.getContext('2d');
+      const GW = 900, GH = 900;
+      const baseRadius = Math.min(GW, GH) / 2.5;
+      const projection = d3.geoOrthographic()
+        .scale(baseRadius)
+        .translate([GW / 2, GH / 2])
+        .clipAngle(90);
+      const path = d3.geoPath().projection(projection).context(gctx);
+      const graticule = d3.geoGraticule();
+
+      function pointInPolygon(point, polygon) {
+        const [x, y] = point;
+        let inside = false;
+        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+          const [xi, yi] = polygon[i];
+          const [xj, yj] = polygon[j];
+          if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
+            inside = !inside;
+          }
+        }
+        return inside;
+      }
+      function pointInFeature(point, feature) {
+        const g = feature.geometry;
+        if (g.type === 'Polygon') {
+          if (!pointInPolygon(point, g.coordinates[0])) return false;
+          for (let i = 1; i < g.coordinates.length; i++) {
+            if (pointInPolygon(point, g.coordinates[i])) return false;
+          }
+          return true;
+        } else if (g.type === 'MultiPolygon') {
+          for (const polygon of g.coordinates) {
+            if (pointInPolygon(point, polygon[0])) {
+              let inHole = false;
+              for (let i = 1; i < polygon.length; i++) {
+                if (pointInPolygon(point, polygon[i])) { inHole = true; break; }
+              }
+              if (!inHole) return true;
+            }
+          }
+          return false;
+        }
+        return false;
+      }
+      function generateDotsInPolygon(feature, dotSpacing) {
+        const dots = [];
+        const bounds = d3.geoBounds(feature);
+        const [[minLng, minLat], [maxLng, maxLat]] = bounds;
+        const stepSize = dotSpacing * 0.08;
+        for (let lng = minLng; lng <= maxLng; lng += stepSize) {
+          for (let lat = minLat; lat <= maxLat; lat += stepSize) {
+            const p = [lng, lat];
+            if (pointInFeature(p, feature)) dots.push(p);
+          }
+        }
+        return dots;
+      }
+
+      // Pre-compute dots ONCE at script load (deterministic given the data).
+      const ALL_DOTS = [];
+      if (window.NE_LAND && window.NE_LAND.features) {
+        window.NE_LAND.features.forEach((f) => {
+          generateDotsInPolygon(f, 16).forEach(([lng, lat]) => {
+            ALL_DOTS.push([lng, lat]);
+          });
+        });
+      }
+
+      // Per-frame draw  -  pure function of `time`.
+      function drawGlobe(time) {
+        const ROT_DEG_PER_SEC = 18;
+        projection.rotate([time * ROT_DEG_PER_SEC, 0, 0]);
+        const scale = projection.scale();
+        const sf = scale / baseRadius;
+
+        gctx.clearRect(0, 0, GW, GH);
+
+        gctx.beginPath();
+        gctx.arc(GW / 2, GH / 2, scale, 0, 2 * Math.PI);
+        gctx.fillStyle = '#000000';
+        gctx.fill();
+        gctx.strokeStyle = '#ffffff';
+        gctx.lineWidth = 2 * sf;
+        gctx.stroke();
+
+        gctx.beginPath();
+        path(graticule());
+        gctx.strokeStyle = '#ffffff';
+        gctx.lineWidth = 1 * sf;
+        gctx.globalAlpha = 0.25;
+        gctx.stroke();
+        gctx.globalAlpha = 1;
+
+        if (window.NE_LAND) {
+          gctx.beginPath();
+          window.NE_LAND.features.forEach((f) => path(f));
+          gctx.strokeStyle = '#ffffff';
+          gctx.lineWidth = 1 * sf;
+          gctx.stroke();
+        }
+
+        for (let i = 0; i < ALL_DOTS.length; i++) {
+          const p = projection(ALL_DOTS[i]);
+          if (p && p[0] >= 0 && p[0] <= GW && p[1] >= 0 && p[1] <= GH) {
+            gctx.beginPath();
+            gctx.arc(p[0], p[1], 1.3 * sf, 0, 2 * Math.PI);
+            gctx.fillStyle = '#bbbbbb';
+            gctx.fill();
+          }
+        }
+      }
+      drawGlobe(0);
+
+      /* GSAP  -  paused, registered, deterministic */
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      tl.eventCallback('onUpdate', () => {
+        const t = tl.time();
+        drawHex(t);
+        drawGlobe(t);
+      });
+
+      tl.from('#globe-wrap', {
+        scale: 0.7, opacity: 0,
+        duration: 0.9, ease: 'back.out(1.6)',
+        transformOrigin: '50% 50%',
+      }, 0);
+
+      tl.from('#watermark', { opacity: 0, x: -30, duration: 0.6, ease: 'power2.out' }, 0.3);
+
+      // Add per-scene tweens here  -  see SKILL.md → Motion Patterns Library.
+
+      window.__timelines['main'] = tl;
+    </script>
+  </body>
+</html>

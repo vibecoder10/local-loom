@@ -1,0 +1,14 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {spawn} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+const preload=path.join(path.dirname(fileURLToPath(import.meta.url)),'windows-hide.cjs').replaceAll('\\','/');
+const env={...process.env,NODE_OPTIONS:[process.env.NODE_OPTIONS||'',`--require="${preload}"`].join(' ')};
+const packageFile=path.join(process.cwd(),'package.json');
+const pkg=fs.existsSync(packageFile)?JSON.parse(fs.readFileSync(packageFile,'utf8')):{};
+const version=pkg.hyperframesVersion||Object.values(pkg.scripts||{}).join(' ').match(/hyperframes@(\d+\.\d+\.\d+)/)?.[1]||'latest';
+const npx=path.join(path.dirname(process.execPath),'node_modules/npm/bin/npx-cli.js');
+if(!fs.existsSync(npx))throw Error('Cannot locate npx beside Node. Use node --require <windows-hide.cjs> <installed-hyperframes-cli> with the project pin.');
+const child=spawn(process.execPath,[npx,'--yes',`hyperframes@${version}`,...process.argv.slice(2)],{env,windowsHide:true,stdio:'inherit'});
+child.once('error',error=>{console.error(error.message);process.exitCode=1;});
+child.once('exit',code=>{process.exitCode=code??1;});

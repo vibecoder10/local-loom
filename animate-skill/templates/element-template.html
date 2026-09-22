@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Element template</title>
+<!--
+  ELEMENT TEMPLATE - copy this file into assets/components/<name>/ and rename the global.
+
+  The contract (see references/creating-elements.md):
+    window.<Name> = { defaults, create({container,width,height,aspect,config}) -> {renderAt(t), setConfig(p), resize(w,h), dispose()} }
+  Everything visible is a pure function of t (scene-local seconds). No timers, no random values, no fetch, no autoplay.
+
+  Mount in a composition:
+    const player = await window.ExampleElement.create({container: el, width: 1920, height: 1080, aspect: 'wide', config: {}});
+    tl.eventCallback('onUpdate', () => player.renderAt(tl.time() - sceneStart));   // HyperFrames drives tl; you drive the element
+
+  Register in the library (paths relative to the package or hub root):
+    { "key": "example-element-v1", "name": "Example element", "category": "Infographics",
+      "image": "assets/components/example/poster.png", "html": "assets/components/example/index.html",
+      "element": "ExampleElement", "elementPath": "assets/components/example/element.js",
+      "config": {}, "tags": ["editable", "16:9", "9:16"], "status": "Reusable", "shareable": true }
+  Then: node library/register-asset.mjs entry.json (community package) or node register-asset.mjs entry.json (hub).
+-->
+<style>
+  :root { color-scheme: dark; --bg: #141311; --card: #1e1c19; --ink: #f2efe8; --muted: #a59e90; --line: #2f2c27; --accent: #ff6b1a; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px Outfit, Arial, sans-serif; }
+  .harness { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 20px; padding: 20px; min-height: 100vh; box-sizing: border-box; }
+  .stage-wrap { display: grid; place-items: center; }
+  .stage { position: relative; width: min(100%, 960px); aspect-ratio: 16 / 9; background: var(--card); overflow: hidden; }
+  body[data-aspect="portrait"] .stage { width: min(100%, 405px); aspect-ratio: 9 / 16; }
+  .panel { display: grid; gap: 12px; align-content: start; font-size: 13px; }
+  .panel label { display: grid; gap: 4px; color: var(--muted); }
+  .panel input[type=range] { width: 100%; accent-color: var(--accent); }
+  .row { display: flex; gap: 6px; }
+  button { font: inherit; color: var(--ink); background: transparent; border: 1px solid var(--line); padding: 6px 10px; cursor: pointer; }
+  button[aria-pressed=true] { border-color: var(--accent); }
+  code { color: var(--muted); }
+</style>
+</head>
+<body data-aspect="wide">
+<script>
+// ---------- THE ELEMENT (edit this block) ----------
+window.ExampleElement = {
+  defaults: { count: 3, spread: 0.32, holdMotion: 0.35, accent: '#ff6b1a' },
+  create({ container, width, height, aspect, config }) {
+    const cfg = { ...this.defaults, ...(config || {}) };
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('viewBox', '0 0 1000 1000');
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%';
+    container.append(svg);
+
+    const centre = document.createElementNS(svgNS, 'circle');
+    centre.setAttribute('r', 70); centre.setAttribute('fill', cfg.accent);
+    svg.append(centre);
+    const nodes = [];
+    for (let i = 0; i < cfg.count; i++) {
+      const g = document.createElementNS(svgNS, 'g');
+      const c = document.createElementNS(svgNS, 'circle');
+      c.setAttribute('r', 46); c.setAttribute('fill', 'none'); c.setAttribute('stroke', '#f2efe8'); c.setAttribute('stroke-width', 8);
+      g.append(c); svg.append(g); nodes.push(g);
+    }
+
+    // Sharp ease-in-out, the house default for 0.4-second entrances.
+    const ease = p => p <= 0 ? 0 : p >= 1 ? 1 : p < .5 ? 2 ** (20 * p - 10) / 2 : (2 - 2 ** (-20 * p + 10)) / 2;
+    let radius = 1000 * cfg.spread, cx = 500, cy = 500;
+
+    function layout(w, h) {
+      // Recompose per aspect: portrait stacks tighter and lower, landscape spreads wider.
+      const portrait = h > w;
+      radius = portrait ? 1000 * cfg.spread * 0.85 : 1000 * cfg.spread;
+      cy = portrait ? 540 : 500;
+      centre.setAttribute('cx', cx); centre.setAttribute('cy', cy);
+    }
+    layout(width, height);
+
+    return {
+      renderAt(t) {
+        // Centre pops in over 0.4 s; nodes reveal one by one; the hold keeps a slow orbit driven by t.
+        const pop = ease(Math.min(1, t / 0.4));
+        centre.setAttribute('transform', `translate(${cx} ${cy}) scale(${pop})`);
+        nodes.forEach((g, i) => {
+          const local = ease(Math.min(1, Math.max(0, (t - 0.4 - i * 0.15) / 0.4)));
+          const angle = -Math.PI / 2 + i * (2 * Math.PI / nodes.length) + t * cfg.holdMotion * 0.6;
+          const x = cx + Math.cos(angle) * radius * local, y = cy + Math.sin(angle) * radius * local;
+          g.setAttribute('transform', `translate(${x} ${y}) scale(${local})`);
+          g.style.opacity = local;
+        });
+      },
+      setConfig(partial) { Object.assign(cfg, partial); layout(container.clientWidth, container.clientHeight); },
+      resize(w, h) { layout(w, h); },
+      dispose() { svg.remove(); }
+    };
+  }
+};
+// ---------- END OF ELEMENT ----------
+
+// ---------- Preview harness (leave as is) ----------
+const stage = document.createElement('div'); stage.className = 'stage';
+const wrap = document.createElement('div'); wrap.className = 'stage-wrap'; wrap.append(stage);
+const panel = document.createElement('div'); panel.className = 'panel';
+panel.innerHTML = `
+  <div class="row"><button data-aspect="wide" aria-pressed="true">16:9</button><button data-aspect="portrait" aria-pressed="false">9:16</button></div>
+  <label>Scrub t = <span id="t">0.00</span> s<input id="scrub" type="range" min="0" max="6" step="0.033" value="0"></label>
+  <div class="row"><button id="play">Play</button><button id="reset">Reset</button></div>
+  <label>holdMotion <input id="hold" type="range" min="0" max="1" step="0.05" value="0.35"></label>
+  <p><code>Scrub backwards: frames must repeat exactly. Switch aspect: layout must recompose, not stretch.</code></p>`;
+const root = document.createElement('div'); root.className = 'harness'; root.append(wrap, panel); document.body.append(root);
+
+let player, t = 0, playing = false, last = 0, frame = 0;
+async function mount() {
+  player?.dispose();
+  player = await window.ExampleElement.create({ container: stage, width: stage.clientWidth, height: stage.clientHeight, aspect: document.body.dataset.aspect, config: { holdMotion: Number(panel.querySelector('#hold').value) } });
+  player.renderAt(t);
+}
+function tick(now) {
+  if (!playing) return;
+  t = Math.min(6, t + (now - last) / 1000); last = now;
+  panel.querySelector('#scrub').value = t; panel.querySelector('#t').textContent = t.toFixed(2);
+  player.renderAt(t);
+  if (t >= 6) { playing = false; panel.querySelector('#play').textContent = 'Play'; return; }
+  frame = requestAnimationFrame(tick);
+}
+panel.querySelector('#scrub').oninput = e => { t = Number(e.target.value); panel.querySelector('#t').textContent = t.toFixed(2); player.renderAt(t); };
+panel.querySelector('#play').onclick = e => { playing = !playing; e.target.textContent = playing ? 'Pause' : 'Play'; if (playing) { last = performance.now(); frame = requestAnimationFrame(tick); } else cancelAnimationFrame(frame); };
+panel.querySelector('#reset').onclick = () => { playing = false; cancelAnimationFrame(frame); t = 0; panel.querySelector('#scrub').value = 0; panel.querySelector('#t').textContent = '0.00'; panel.querySelector('#play').textContent = 'Play'; player.renderAt(0); };
+panel.querySelector('#hold').oninput = e => { player.setConfig({ holdMotion: Number(e.target.value) }); player.renderAt(t); };
+panel.querySelectorAll('[data-aspect]').forEach(b => b.onclick = () => { document.body.dataset.aspect = b.dataset.aspect; panel.querySelectorAll('[data-aspect]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); player.resize(stage.clientWidth, stage.clientHeight); player.renderAt(t); });
+window.addEventListener('resize', () => { player?.resize(stage.clientWidth, stage.clientHeight); player?.renderAt(t); });
+mount();
+</script>
+</body>
+</html>

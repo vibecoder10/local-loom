@@ -1,0 +1,153 @@
+<!doctype html>
+<!--
+  Remotion → Hyperframes port skeleton.
+  Use when adapting any React component that imports from `remotion`
+  (Sequence, useCurrentFrame, useVideoConfig, interpolate, spring, AbsoluteFill).
+
+  THE THREE CONVERSIONS THAT MATTER:
+
+    Remotion                              | Hyperframes
+    --------------------------------------+-----------------------------------------------
+    useCurrentFrame()                     | tl.time() * fps    (or just tl.time() seconds)
+    useVideoConfig()                      | constants from data-width/height/duration
+    interpolate(frame, [a,b], [x,y])      | gsap.fromTo(el, {x}, {x:y, duration: b-a})
+    spring({ frame, fps, ... })           | gsap.to(el, { ..., ease: 'back.out(1.6)' })
+    Sequence from={t} durationInFrames={d}| <div class="clip" data-start="t/fps" ...>
+    AbsoluteFill                          | position: absolute; inset: 0
+    React component returning JSX         | DOM element built once + per-tick mutation
+
+  THE PER-CARD / PER-COMPONENT PATTERN:
+
+    React/Remotion idiom:
+      function Card({ index, frame }) {
+        const t = noise(index, frame);
+        return <div style={{ height: t * 100 }}>{frame}</div>;
+      }
+      // Re-runs the function every frame, React diffs DOM.
+
+    Hyperframes idiom:
+      // 1. Build the DOM once on script init.
+      // 2. On every tl onUpdate, mutate just the dynamic parts via innerHTML or style.
+      // 3. Static parts (gradients, logos, code mockups) render once and never change.
+
+  This skeleton ports a tiny "title that pans across screen with a noise wobble"
+  example. Replace the body with your own card grid / pan / shader / transition.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 1920px; height: 1080px; overflow: hidden;
+        background: #050505; color: #fff;
+        font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+      }
+      #root { position: relative; width: 1920px; height: 1080px; }
+
+      /* The "stage" is what would have been <AbsoluteFill> in Remotion */
+      .stage {
+        position: absolute; inset: 0;
+        overflow: hidden;
+      }
+
+      /* The mover container  -  replaces a Remotion `transform: translate(x,y)` */
+      #mover {
+        position: absolute; left: 0; top: 0;
+        width: 1920px; height: 1080px;
+        will-change: transform;
+      }
+
+      .demo-title {
+        position: absolute; left: 50%; top: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 144px; font-weight: 700;
+        letter-spacing: -0.04em;
+      }
+      .demo-readout {
+        position: absolute; left: 36px; bottom: 36px;
+        font-family: ui-monospace, monospace;
+        font-size: 16px; color: #888;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="6"
+      data-width="1920"
+      data-height="1080"
+    >
+      <div id="stage" class="stage clip" data-start="0" data-duration="6" data-track-index="0">
+        <div id="mover">
+          <div id="demoTitle" class="demo-title">Hello, Hyperframes</div>
+        </div>
+        <div id="demoReadout" class="demo-readout"></div>
+      </div>
+    </div>
+
+    <script>
+      /* ============================================================
+         Equivalent of `useVideoConfig()` in Remotion  -  just constants.
+         ============================================================ */
+      const W = 1920, H = 1080;
+      const FPS = 30;            // for any frame-based math the source assumes
+      const DURATION_S = 6;
+
+      /* ============================================================
+         Pure helpers (deterministic  -  same input, same output every frame)
+         ============================================================ */
+      function noise(i, t) {
+        return Math.sin(t + i) * 0.5 + 0.5;
+      }
+
+      // Equivalent of Remotion's `interpolate(frame, [in,out], [a,b], { clamp: true })`.
+      function lerp(t, inMin, inMax, outMin, outMax) {
+        const k = Math.max(0, Math.min(1, (t - inMin) / (inMax - inMin)));
+        return outMin + (outMax - outMin) * k;
+      }
+
+      /* ============================================================
+         Build the DOM once. (In Remotion, JSX rebuilds every frame  - 
+         here we build once and mutate on the timeline tick.)
+         ============================================================ */
+      const titleEl = document.getElementById('demoTitle');
+      const moverEl = document.getElementById('mover');
+      const readoutEl = document.getElementById('demoReadout');
+
+      /* ============================================================
+         Per-frame mutation  -  the equivalent of a React render.
+         Called on every Hyperframes frame seek via tl.eventCallback.
+         ============================================================ */
+      function tick(t) {
+        // Pan: 0,0 → -300, +60 over the full duration (linear)
+        const panX = lerp(t, 0, DURATION_S, 0, -300);
+        const panY = lerp(t, 0, DURATION_S, 0,  60);
+        moverEl.style.transform = `translate(${panX}px, ${panY}px)`;
+
+        // Title color drifts via noise  -  replaces a React style={{color: hsl(...)}} block
+        const hue = Math.floor(200 + noise(0, t * 2) * 60);
+        titleEl.style.color = `hsl(${hue}, 80%, 70%)`;
+
+        // Readout shows the current frame number  -  the Remotion `frame` is just t * fps
+        readoutEl.textContent = `frame ${(t * FPS).toFixed(0).padStart(3, '0')} · t=${t.toFixed(2)}s`;
+      }
+
+      /* ============================================================
+         GSAP timeline registration  -  same as the composition template.
+         ============================================================ */
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.eventCallback('onUpdate', () => tick(tl.time()));
+
+      // Initial paint
+      tick(0);
+
+      window.__timelines['main'] = tl;
+    </script>
+  </body>
+</html>

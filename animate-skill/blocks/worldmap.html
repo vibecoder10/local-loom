@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500;700&display=block"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/MotionPathPlugin.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { background: transparent; overflow: hidden; }
+      body { width: 1920px; height: 1080px; font-family: "Outfit", sans-serif; color: #FFFFFF; }
+
+      [data-composition-id="worldmap-puvindren"] {
+        width: 1920px; height: 1080px;
+        background: #050507;
+        overflow: hidden;
+        position: relative;
+        font-family: "Outfit", sans-serif;
+      }
+
+      [data-composition-id="worldmap-puvindren"] .heading-row {
+        position: absolute;
+        top: 60px; left: 0; right: 0;
+        text-align: center;
+        z-index: 30;
+      }
+
+      [data-composition-id="worldmap-puvindren"] .kicker {
+        font-family: "Geist Mono", monospace;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.28em;
+        color: #518C16;
+        text-transform: uppercase;
+        margin-bottom: 14px;
+        opacity: 0;
+      }
+
+      [data-composition-id="worldmap-puvindren"] .heading {
+        font-family: "Outfit", sans-serif;
+        font-weight: 700;
+        font-size: 72px;
+        line-height: 1.0;
+        letter-spacing: -0.03em;
+        background: linear-gradient(180deg, #FFFFFF 0%, #71717A 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        filter: drop-shadow(0 8px 20px rgba(255,255,255,0.08));
+        margin-bottom: 16px;
+        opacity: 0;
+      }
+
+      [data-composition-id="worldmap-puvindren"] .heading em {
+        font-style: normal;
+        background: linear-gradient(180deg, #9ee87a 0%, #518C16 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        filter: drop-shadow(0 0 24px rgba(81,140,22,0.3));
+      }
+
+      [data-composition-id="worldmap-puvindren"] .subhead {
+        font-family: "Geist", sans-serif;
+        font-size: 22px;
+        font-weight: 400;
+        line-height: 1.45;
+        color: rgba(255,255,255,0.6);
+        max-width: 720px;
+        margin: 0 auto;
+        opacity: 0;
+      }
+
+      /* Map container */
+      [data-composition-id="worldmap-puvindren"] .map-stage {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 1700px;
+        height: 850px;
+        z-index: 10;
+      }
+
+      [data-composition-id="worldmap-puvindren"] .map-bg {
+        position: absolute;
+        inset: 0;
+        background-image: url("../assets/world-map.svg");
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        opacity: 0;
+        mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
+        -webkit-mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
+      }
+
+      [data-composition-id="worldmap-puvindren"] svg.routes {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      [data-composition-id="worldmap-puvindren"] .city-label {
+        position: absolute;
+        background: rgba(10,10,10,0.85);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 8px;
+        padding: 6px 12px;
+        font-family: "Geist", sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        color: #FFFFFF;
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 25;
+        opacity: 0;
+        transform: translate(-50%, -120%);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+      }
+
+      /* Stat strip at bottom */
+      [data-composition-id="worldmap-puvindren"] .stat-strip {
+        position: absolute;
+        bottom: 60px; left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 60px;
+        padding: 20px 40px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 100px;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        z-index: 30;
+        opacity: 0;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      }
+
+      [data-composition-id="worldmap-puvindren"] .stat-item {
+        display: flex; flex-direction: column; align-items: center; gap: 4px;
+      }
+
+      [data-composition-id="worldmap-puvindren"] .stat-num {
+        font-family: "Outfit", sans-serif;
+        font-weight: 700;
+        font-size: 36px;
+        line-height: 1;
+        letter-spacing: -0.03em;
+        color: #FFFFFF;
+      }
+
+      [data-composition-id="worldmap-puvindren"] .stat-num em {
+        font-style: normal;
+        color: #9ee87a;
+      }
+
+      [data-composition-id="worldmap-puvindren"] .stat-label {
+        font-family: "Geist Mono", monospace;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        color: rgba(255,255,255,0.55);
+        text-transform: uppercase;
+      }
+
+      [data-composition-id="worldmap-puvindren"] .stat-divider {
+        width: 1px;
+        height: 36px;
+        background: rgba(255,255,255,0.12);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="worldmap-puvindren"
+      data-width="1920"
+      data-height="1080"
+      data-start="0"
+      data-duration="10"
+    >
+      <!-- Heading -->
+      <div class="heading-row">
+        <div class="kicker" id="kicker">PUVIN · GREEN WEB AI · KUALA LUMPUR</div>
+        <div class="heading" id="heading">Building <em>globally</em>.</div>
+        <div class="subhead" id="subhead">Web design and growth for founders, agencies, and brands across the globe.</div>
+      </div>
+
+      <!-- Map -->
+      <div id="map-stage" class="clip map-stage" data-start="0" data-duration="10" data-track-index="0">
+        <div class="map-bg" id="map-bg"></div>
+
+        <svg class="routes" id="routes" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#9ee87a" stop-opacity="0"/>
+              <stop offset="20%" stop-color="#9ee87a" stop-opacity="1"/>
+              <stop offset="80%" stop-color="#518C16" stop-opacity="1"/>
+              <stop offset="100%" stop-color="#518C16" stop-opacity="0"/>
+            </linearGradient>
+
+            <filter id="markerGlow">
+              <feGaussianBlur stdDeviation="1.5" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            <radialGradient id="hubGlow">
+              <stop offset="0%" stop-color="#9ee87a" stop-opacity="0.7"/>
+              <stop offset="100%" stop-color="#9ee87a" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+
+          <!-- Routes (paths) -->
+          <!-- KL: 625.97, 192.92 -->
+          <!-- All paths from KL hub. Quad bezier with control point lifted. -->
+
+          <!-- KL → Singapore (629.69, 197.10) -->
+          <path id="path-1" class="route" d="M 625.97 192.92 Q 626.83 152.93 629.69 197.10" fill="none" stroke="url(#lineGradient)" stroke-width="1.6"/>
+          <!-- KL → Tokyo (710.36, 120.73) -->
+          <path id="path-2" class="route" d="M 625.97 192.92 Q 668.16 71.30 710.36 120.73" fill="none" stroke="url(#lineGradient)" stroke-width="1.6"/>
+          <!-- KL → Sydney (735.05, 275.30) -->
+          <path id="path-3" class="route" d="M 625.97 192.92 Q 680.51 142.92 735.05 275.30" fill="none" stroke="url(#lineGradient)" stroke-width="1.6"/>
+          <!-- KL → Dubai (523.85, 143.99) -->
+          <path id="path-4" class="route" d="M 625.97 192.92 Q 574.91 93.99 523.85 143.99" fill="none" stroke="url(#lineGradient)" stroke-width="1.6"/>
+          <!-- KL → London (399.76, 85.54) -->
+          <path id="path-5" class="route" d="M 625.97 192.92 Q 512.86 35.54 399.76 85.54" fill="none" stroke="url(#lineGradient)" stroke-width="1.6"/>
+          <!-- KL → New York (235.55, 109.51) -->
+          <path id="path-6" class="route" d="M 625.97 192.92 Q 430.76 59.51 235.55 109.51" fill="none" stroke="url(#lineGradient)" stroke-width="1.6"/>
+
+          <!-- Travelling dots (hidden initially) -->
+          <circle id="dot-1" class="dot" r="3.5" fill="#9ee87a" opacity="0" filter="url(#markerGlow)"/>
+          <circle id="dot-2" class="dot" r="3.5" fill="#9ee87a" opacity="0" filter="url(#markerGlow)"/>
+          <circle id="dot-3" class="dot" r="3.5" fill="#9ee87a" opacity="0" filter="url(#markerGlow)"/>
+          <circle id="dot-4" class="dot" r="3.5" fill="#9ee87a" opacity="0" filter="url(#markerGlow)"/>
+          <circle id="dot-5" class="dot" r="3.5" fill="#9ee87a" opacity="0" filter="url(#markerGlow)"/>
+          <circle id="dot-6" class="dot" r="3.5" fill="#9ee87a" opacity="0" filter="url(#markerGlow)"/>
+
+          <!-- KL hub: special  -  bigger pulse, brighter -->
+          <g class="hub" id="hub">
+            <circle cx="625.97" cy="192.92" r="20" fill="url(#hubGlow)" id="hub-aura"/>
+            <circle cx="625.97" cy="192.92" r="5" fill="#9ee87a" filter="url(#markerGlow)"/>
+            <circle cx="625.97" cy="192.92" r="2.5" fill="#FFFFFF"/>
+          </g>
+
+          <!-- Destination markers (hidden initially, animated in as paths complete) -->
+          <g class="city-marker" id="marker-1" opacity="0">
+            <circle cx="629.69" cy="197.10" r="3" fill="#9ee87a" filter="url(#markerGlow)"/>
+            <circle cx="629.69" cy="197.10" r="3" fill="#9ee87a" opacity="0.4" class="ring" id="ring-1"/>
+          </g>
+          <g class="city-marker" id="marker-2" opacity="0">
+            <circle cx="710.36" cy="120.73" r="3" fill="#9ee87a" filter="url(#markerGlow)"/>
+            <circle cx="710.36" cy="120.73" r="3" fill="#9ee87a" opacity="0.4" class="ring" id="ring-2"/>
+          </g>
+          <g class="city-marker" id="marker-3" opacity="0">
+            <circle cx="735.05" cy="275.30" r="3" fill="#9ee87a" filter="url(#markerGlow)"/>
+            <circle cx="735.05" cy="275.30" r="3" fill="#9ee87a" opacity="0.4" class="ring" id="ring-3"/>
+          </g>
+          <g class="city-marker" id="marker-4" opacity="0">
+            <circle cx="523.85" cy="143.99" r="3" fill="#9ee87a" filter="url(#markerGlow)"/>
+            <circle cx="523.85" cy="143.99" r="3" fill="#9ee87a" opacity="0.4" class="ring" id="ring-4"/>
+          </g>
+          <g class="city-marker" id="marker-5" opacity="0">
+            <circle cx="399.76" cy="85.54" r="3" fill="#9ee87a" filter="url(#markerGlow)"/>
+            <circle cx="399.76" cy="85.54" r="3" fill="#9ee87a" opacity="0.4" class="ring" id="ring-5"/>
+          </g>
+          <g class="city-marker" id="marker-6" opacity="0">
+            <circle cx="235.55" cy="109.51" r="3" fill="#9ee87a" filter="url(#markerGlow)"/>
+            <circle cx="235.55" cy="109.51" r="3" fill="#9ee87a" opacity="0.4" class="ring" id="ring-6"/>
+          </g>
+        </svg>
+
+        <!-- City labels (HTML overlays positioned by % within map-stage) -->
+        <!-- map-stage is 1700x850. SVG viewBox 800x400 -> scale: 2.125x horizontal, 2.125x vertical -->
+        <!-- KL hub label: 625.97/800 = 78.25%, 192.92/400 = 48.23% -->
+        <div class="city-label" id="label-hub" style="left: 78.25%; top: 48.23%;">KUALA LUMPUR</div>
+        <!-- Singapore: x=629.69/800=78.71%, y=197.10/400=49.28% -->
+        <div class="city-label" id="label-1" style="left: 78.71%; top: 53.28%;">Singapore</div>
+        <!-- Tokyo: x=710.36/800=88.80%, y=120.73/400=30.18% -->
+        <div class="city-label" id="label-2" style="left: 88.80%; top: 30.18%;">Tokyo</div>
+        <!-- Sydney: x=735.05/800=91.88%, y=275.30/400=68.83% -->
+        <div class="city-label" id="label-3" style="left: 91.88%; top: 68.83%;">Sydney</div>
+        <!-- Dubai: x=523.85/800=65.48%, y=143.99/400=36.00% -->
+        <div class="city-label" id="label-4" style="left: 65.48%; top: 36.00%;">Dubai</div>
+        <!-- London: x=399.76/800=49.97%, y=85.54/400=21.39% -->
+        <div class="city-label" id="label-5" style="left: 49.97%; top: 21.39%;">London</div>
+        <!-- New York: x=235.55/800=29.44%, y=109.51/400=27.38% -->
+        <div class="city-label" id="label-6" style="left: 29.44%; top: 27.38%;">New York</div>
+      </div>
+
+      <!-- Stat strip -->
+      <div class="stat-strip" id="stat-strip">
+        <div class="stat-item">
+          <span class="stat-num"><em>15+</em></span>
+          <span class="stat-label">Brands shipped</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-num"><em>30-50%</em></span>
+          <span class="stat-label">Revenue lift</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-num"><em>5</em>yr</span>
+          <span class="stat-label">Track record</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      if (window.MotionPathPlugin) gsap.registerPlugin(MotionPathPlugin);
+
+      var tl = gsap.timeline({ paused: true });
+
+      var kicker = document.getElementById("kicker");
+      var heading = document.getElementById("heading");
+      var subhead = document.getElementById("subhead");
+      var mapBg = document.getElementById("map-bg");
+      var hub = document.getElementById("hub");
+      var hubAura = document.getElementById("hub-aura");
+      var statStrip = document.getElementById("stat-strip");
+      var labelHub = document.getElementById("label-hub");
+
+      var paths = [
+        document.getElementById("path-1"),
+        document.getElementById("path-2"),
+        document.getElementById("path-3"),
+        document.getElementById("path-4"),
+        document.getElementById("path-5"),
+        document.getElementById("path-6")
+      ];
+      var dots = [
+        document.getElementById("dot-1"),
+        document.getElementById("dot-2"),
+        document.getElementById("dot-3"),
+        document.getElementById("dot-4"),
+        document.getElementById("dot-5"),
+        document.getElementById("dot-6")
+      ];
+      var markers = [
+        document.getElementById("marker-1"),
+        document.getElementById("marker-2"),
+        document.getElementById("marker-3"),
+        document.getElementById("marker-4"),
+        document.getElementById("marker-5"),
+        document.getElementById("marker-6")
+      ];
+      var rings = [
+        document.getElementById("ring-1"),
+        document.getElementById("ring-2"),
+        document.getElementById("ring-3"),
+        document.getElementById("ring-4"),
+        document.getElementById("ring-5"),
+        document.getElementById("ring-6")
+      ];
+      var labels = [
+        document.getElementById("label-1"),
+        document.getElementById("label-2"),
+        document.getElementById("label-3"),
+        document.getElementById("label-4"),
+        document.getElementById("label-5"),
+        document.getElementById("label-6")
+      ];
+
+      // Compute path lengths for stroke-dashoffset animation
+      paths.forEach(function (p) {
+        var len = p.getTotalLength();
+        p.style.strokeDasharray = len;
+        p.style.strokeDashoffset = len;
+        p.dataset.len = len;
+      });
+
+      // Hub aura sized to scale 0
+      gsap.set(hubAura, { transformOrigin: "625.97px 192.92px", scale: 0.5, opacity: 0 });
+
+      // ====== PHASE 1: Map fade in (0-1s) ======
+
+      tl.fromTo(mapBg,
+        { opacity: 0, scale: 1.04 },
+        { opacity: 1, scale: 1, duration: 1.2, ease: "power3.out" },
+        0
+      );
+
+      // Heading row
+      tl.fromTo(kicker,
+        { opacity: 0, y: -10 },
+        { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" },
+        0.3
+      );
+      tl.fromTo(heading,
+        { opacity: 0, y: 20, filter: "blur(10px)" },
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.8, ease: "expo.out" },
+        0.5
+      );
+      tl.fromTo(subhead,
+        { opacity: 0, y: 10 },
+        { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" },
+        0.9
+      );
+
+      // ====== PHASE 2: Hub appears + pulses (1.2-1.7s) ======
+
+      tl.fromTo(hub,
+        { opacity: 0, scale: 0.4, transformOrigin: "625.97px 192.92px" },
+        { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.8)" },
+        1.2
+      );
+      tl.fromTo(hubAura,
+        { scale: 0.5, opacity: 0 },
+        { scale: 1.5, opacity: 0.6, duration: 0.6, ease: "power2.out" },
+        1.2
+      );
+
+      // KL hub label
+      tl.fromTo(labelHub,
+        { opacity: 0, y: -12 },
+        { opacity: 1, y: -100, duration: 0.45, ease: "power2.out" },
+        1.4
+      );
+
+      // Hub aura ambient pulse (attached to tl, not bare gsap)
+      tl.to(hubAura, {
+        scale: 2.2,
+        opacity: 0.2,
+        duration: 1.0,
+        yoyo: true,
+        repeat: 7,
+        ease: "sine.inOut"
+      }, 1.7);
+
+      // ====== PHASE 3: Routes draw + city markers + travelling dots (1.7-7s) ======
+
+      var stagger = 0.45;
+      var drawDuration = 1.1;
+
+      paths.forEach(function (path, i) {
+        var startT = 1.7 + i * stagger;
+        var endT = startT + drawDuration;
+        var len = path.dataset.len;
+
+        // Draw the path
+        tl.to(path, {
+          strokeDashoffset: 0,
+          duration: drawDuration,
+          ease: "power2.inOut"
+        }, startT);
+
+        // Travelling dot
+        if (window.MotionPathPlugin) {
+          gsap.set(dots[i], { opacity: 0 });
+          tl.to(dots[i], { opacity: 1, duration: 0.1 }, startT);
+          tl.to(dots[i], {
+            motionPath: {
+              path: path,
+              align: path,
+              autoRotate: false,
+              alignOrigin: [0.5, 0.5]
+            },
+            duration: drawDuration,
+            ease: "power2.inOut"
+          }, startT);
+          tl.to(dots[i], { opacity: 0, duration: 0.2 }, endT);
+        }
+
+        // Marker pops in at endpoint
+        tl.fromTo(markers[i],
+          { opacity: 0 },
+          { opacity: 1, duration: 0.3, ease: "power2.out" },
+          endT - 0.1
+        );
+
+        // Ring pulse from marker (one shot, attached to tl)
+        tl.fromTo(rings[i],
+          { transformOrigin: "center", scale: 1, opacity: 0.6 },
+          { scale: 4, opacity: 0, duration: 1.4, ease: "power1.out" },
+          endT - 0.1
+        );
+
+        // Label fade in
+        tl.fromTo(labels[i],
+          { opacity: 0, y: -10 },
+          { opacity: 1, y: -100, duration: 0.4, ease: "power2.out" },
+          endT
+        );
+      });
+
+      // ====== PHASE 4: Stat strip appears (last beat) ======
+
+      tl.fromTo(statStrip,
+        { opacity: 0, y: 30, scale: 0.9 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.7, ease: "back.out(1.4)" },
+        4.6
+      );
+
+      // ====== PHASE 5: Hold + ambient (7-10s) ======
+
+      // Periodic ring pulses on each marker during hold
+      markers.forEach(function (marker, i) {
+        var ringEl = rings[i];
+        // Skip  -  already pulsed once during draw. Add extra pulse during hold for liveliness.
+        tl.fromTo(ringEl,
+          { scale: 1, opacity: 0.5 },
+          { scale: 4, opacity: 0, duration: 1.3, ease: "power1.out" },
+          7.5 + i * 0.18
+        );
+      });
+
+      // Subtle map bg breathe
+      tl.to(mapBg, {
+        scale: 1.015,
+        duration: 1.3,
+        yoyo: true,
+        repeat: 1,
+        ease: "sine.inOut"
+      }, 7.0);
+
+      window.__timelines["worldmap-puvindren"] = tl;
+    </script>
+  </body>
+</html>

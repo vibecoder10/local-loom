@@ -1,0 +1,152 @@
+<!doctype html>
+<!--
+  Three.js shader starter for Hyperframes.
+  Use when porting a GLSL fragment shader from Shadertoy, 21st.dev,
+  Aceternity, or a Three.js-based React component.
+
+  KEY PATTERN  -  replace per-frame state accumulation with a deterministic
+  pure-time function. Every other piece is plumbing.
+
+    Original (React/Three.js):
+      const animate = () => {
+        requestAnimationFrame(animate);
+        uniforms.time.value += 0.05;        // accumulating
+        renderer.render(scene, camera);
+      };
+
+    Hyperframes (this template):
+      tl.eventCallback('onUpdate', () => {
+        uniforms.time.value = tl.time() * SHADER_SPEED;   // pure function of time
+        renderer.render(scene, camera);
+      });
+
+  CUSTOMIZE:
+  - Paste your fragment shader into `fragmentShader` (vertex shader is usually
+    the trivial pass-through and stays as-is).
+  - Tune SHADER_SPEED to match the original visual cadence (start with 30,
+    which reproduces a 0.05/frame @ 30fps accumulation).
+  - SetData-duration on the root + clip to your desired length.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 1920px; height: 1080px; overflow: hidden;
+        background: #000;
+      }
+      #root { position: relative; width: 1920px; height: 1080px; }
+      #shader-stage {
+        position: absolute; inset: 0;
+        background: #000;
+        overflow: hidden;
+      }
+      #shader-stage canvas {
+        display: block;
+        width: 1920px !important;
+        height: 1080px !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="6"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- Track 0: Three.js shader stage. Layer overlays on tracks 1+ as needed. -->
+      <div
+        id="shader-stage"
+        class="clip"
+        data-start="0"
+        data-duration="6"
+        data-track-index="0"
+      ></div>
+    </div>
+
+    <script>
+      const W = 1920, H = 1080;
+      const stage = document.getElementById('shader-stage');
+
+      const camera = new THREE.Camera();
+      camera.position.z = 1;
+      const scene = new THREE.Scene();
+      const geometry = new THREE.PlaneGeometry(2, 2);
+
+      const uniforms = {
+        time: { value: 0.0 },
+        resolution: { value: new THREE.Vector2(W, H) },
+      };
+
+      // CUSTOMIZE: most shaders use this trivial pass-through. Leave it.
+      const vertexShader = `
+        void main() {
+          gl_Position = vec4(position, 1.0);
+        }
+      `;
+
+      // CUSTOMIZE: paste your fragment shader here.
+      // Required uniforms: `vec2 resolution` and `float time`.
+      // Convert Shadertoy `iResolution`/`iTime` → `resolution`/`time` and
+      // wrap mainImage(out vec4 fragColor, in vec2 fragCoord) into:
+      //   void main(void) { mainImage(gl_FragColor, gl_FragCoord.xy); }
+      const fragmentShader = `
+        precision highp float;
+        uniform vec2 resolution;
+        uniform float time;
+
+        void main(void) {
+          vec2 uv = (gl_FragCoord.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
+          float t = time * 0.05;
+
+          // Replace the body  -  this is just a placeholder hue gradient.
+          vec3 color = 0.5 + 0.5 * cos(t + uv.xyx + vec3(0, 2, 4));
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `;
+
+      const material = new THREE.ShaderMaterial({
+        uniforms,
+        vertexShader,
+        fragmentShader,
+      });
+
+      const mesh = new THREE.Mesh(geometry, material);
+      scene.add(mesh);
+
+      // antialias: true is fine. preserveDrawingBuffer:true is required for the
+      // Hyperframes capture pipeline to read the canvas back reliably on some
+      // GPU paths. Pixel ratio is locked at 1 for determinism.
+      const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+      renderer.setPixelRatio(1);
+      renderer.setSize(W, H);
+      stage.appendChild(renderer.domElement);
+
+      // Initial paint at t=0 so frame 0 is never blank
+      renderer.render(scene, camera);
+
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // CUSTOMIZE: tune to match the original visual cadence.
+      // 30 = matches a `time += 0.05` per-frame loop running at 30fps.
+      // Higher = faster; lower = slower / more meditative.
+      const SHADER_SPEED = 30;
+
+      // The whole port comes down to this one callback.
+      tl.eventCallback('onUpdate', () => {
+        uniforms.time.value = tl.time() * SHADER_SPEED;
+        renderer.render(scene, camera);
+      });
+
+      window.__timelines['main'] = tl;
+    </script>
+  </body>
+</html>

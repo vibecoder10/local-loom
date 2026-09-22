@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<!--
+  Hyperframes storyboard  -  RoboLabs / slides aesthetic
+
+  HOW TO USE:
+  1. Copy this file into the project folder as `storyboard.html`
+  2. Update the HEADER (title, total duration, scene count)
+  3. Update the TIMELINE BAR proportions (flex values per scene)
+  4. Customize each <section class="scene">  -  layout preview + notes
+  5. Open in browser, share the path with the user
+  6. Iterate via mark-up before touching the real composition
+
+  EACH SCENE CARD HAS:
+  - Scene number + title (italic Instrument Serif)
+  - Scene timing (start → end · duration)
+  - Layout preview (scaled 1920×1080 = 880×495  -  50% scale)
+    Position elements with absolute coordinates scaled by 880/1920 = 0.458
+  - Notes panel (right side): "What's on screen", "Motion", timing rows
+  - Transition arrow at bottom
+
+  USEFUL ELEMENT CLASSES IN PREVIEW:
+  - .pv-video          -  the video frame (with "YOU" placeholder)
+  - .pv-card.c-X       -  sample translucent card (c-polaroid, c-editorial, c-comics, c-product)
+  - .pv-panel.X        -  left text panel (violet, cyan, teal, amber, pink)
+  - .pv-stage          -  center-stage placeholder (dashed border, "where content lands")
+  - .pv-watermark      -  RoboLabs watermark
+  - .pv-tag            -  lesson/topic tag
+  - .pv-outro          -  outro frame
+  - .pv-label          -  annotation chip
+  - .pv-arrow + SVG    -  motion arrows
+
+  COLOR CODING (per scene):
+  - .scene.s1 = orange · .scene.s2 = violet · .scene.s3 = cyan · .scene.s4 = teal · .scene.outro = teal
+  - .scene.t1 / .t2 = transition (dim)
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>[PROJECT]  -  Storyboard · Motion Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,5 93,28 93,72 50,95 7,72 7,28' fill='%23ff6b1a'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #0a0a0a; --surface: #0f1119; --card: #14161f;
+  --border: #1f2230; --border-2: #2e3244;
+  --text: #e0e0e0; --text-paper: #f1ece0; --text-dim: #888; --muted: #9aa0b0;
+  --accent: #ff6b1a; --teal: #50e3c2; --amber: #f5a623;
+  --violet: #8b5cf6; --cyan: #22d3ee; --pink: #f472b6;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); line-height: 1.55; min-height: 100vh; position: relative; }
+canvas#hexBg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+body::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 1;
+  background:
+    radial-gradient(800px at 14% 8%, rgba(255,107,26,0.04), transparent 60%),
+    radial-gradient(700px at 85% 92%, rgba(139,92,246,0.05), transparent 60%);
+}
+.wrap { position: relative; z-index: 3; max-width: 1280px; margin: 0 auto; padding: 80px 32px 160px; }
+
+/* HEADER */
+.kicker { display: inline-flex; align-items: center; gap: 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; letter-spacing: 0.22em; color: var(--accent); text-transform: uppercase; margin-bottom: 18px; }
+.kicker svg { width: 14px; height: 14px; }
+h1.display { font-family: 'Instrument Serif', serif; font-weight: 400; font-size: clamp(56px, 7vw, 92px); line-height: 0.98; letter-spacing: -0.02em; color: var(--text-paper); margin-bottom: 20px; }
+h1.display em { font-style: italic; color: var(--accent); }
+.subtitle { font-size: 18px; color: var(--text-dim); max-width: 700px; line-height: 1.55; margin-bottom: 28px; }
+.meta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 32px; }
+.meta-pill { display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px; background: rgba(255,107,26,0.05); border: 1px solid rgba(255,107,26,0.18); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; color: var(--accent); text-transform: uppercase; }
+.meta-pill strong { color: var(--text); }
+.meta-pill.violet { background: rgba(139,92,246,0.06); border-color: rgba(139,92,246,0.22); color: var(--violet); }
+
+/* TIMELINE BAR  -  set flex values to match scene durations */
+.timeline-bar { display: flex; align-items: stretch; margin: 32px 0 64px; height: 64px; border-radius: 14px; overflow: hidden; background: var(--card); border: 1px solid var(--border); }
+.timeline-bar .seg { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; padding: 8px 14px; border-right: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text); position: relative; }
+.timeline-bar .seg:last-child { border-right: none; }
+.timeline-bar .seg .dur { color: var(--text-dim); font-weight: 500; font-size: 10px; }
+.timeline-bar .seg.s1 { background: linear-gradient(180deg, rgba(255,107,26,0.12), transparent); }
+.timeline-bar .seg.s2 { background: linear-gradient(180deg, rgba(139,92,246,0.12), transparent); }
+.timeline-bar .seg.s3 { background: linear-gradient(180deg, rgba(34,211,238,0.12), transparent); }
+.timeline-bar .seg.s4 { background: linear-gradient(180deg, rgba(80,227,194,0.12), transparent); }
+.timeline-bar .seg.t1, .timeline-bar .seg.t2 { background: rgba(255,255,255,0.02); color: var(--text-dim); font-size: 9px; }
+.timeline-bar .seg.outro { background: linear-gradient(180deg, rgba(80,227,194,0.12), transparent); color: var(--teal); }
+
+/* TOC */
+.toc { position: sticky; top: 24px; background: rgba(10,10,10,0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 100px; padding: 8px; display: inline-flex; gap: 6px; z-index: 50; margin-bottom: 24px; }
+.toc a { padding: 6px 12px; font-size: 11px; font-weight: 700; color: var(--text-dim); text-decoration: none; border-radius: 100px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.14em; text-transform: uppercase; transition: all 0.2s; }
+.toc a:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+
+/* SCENE CARDS */
+.scene { margin-top: 56px; display: grid; grid-template-columns: 880px 1fr; gap: 28px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 28px; scroll-margin-top: 32px; }
+.scene-head { grid-column: 1 / -1; display: flex; align-items: baseline; justify-content: space-between; gap: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.scene-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; letter-spacing: 0.22em; color: var(--c, var(--accent)); text-transform: uppercase; display: inline-flex; align-items: center; gap: 12px; }
+.scene-num::before { content: ''; width: 32px; height: 2px; background: var(--c, var(--accent)); }
+.scene-time { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; letter-spacing: 0.16em; color: var(--text-dim); text-transform: uppercase; }
+.scene h2 { font-family: 'Instrument Serif', serif; font-weight: 400; font-size: 48px; line-height: 1.05; color: var(--text-paper); letter-spacing: -0.01em; flex: 1; }
+.scene h2 em { font-style: italic; color: var(--c, var(--accent)); }
+.scene.s1 { --c: var(--accent); }
+.scene.s2 { --c: var(--violet); }
+.scene.s3 { --c: var(--cyan); }
+.scene.s4 { --c: var(--teal); }
+.scene.t1, .scene.t2 { --c: var(--text-dim); }
+.scene.outro { --c: var(--teal); }
+
+/* LAYOUT PREVIEW (1920×1080 → 880×495, scale 0.458) */
+.preview { width: 880px; height: 495px; background: #050507; border: 1px solid var(--border-2); border-radius: 12px; position: relative; overflow: hidden; }
+.preview::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle at 50% 50%, rgba(139,92,246,0.06), transparent 60%); }
+
+/* Video placeholder ("YOU") */
+.pv-video { position: absolute; background: linear-gradient(135deg, rgba(245,232,220,0.85) 0%, rgba(160,140,110,0.85) 60%, rgba(110,90,60,0.85) 100%), radial-gradient(circle at 50% 35%, rgba(245,232,220,0.95), transparent 50%); border-radius: 4px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.pv-video::after { content: 'YOU'; font-family: 'Instrument Serif', serif; font-style: italic; font-size: 24px; color: rgba(0,0,0,0.55); letter-spacing: -0.01em; }
+.pv-video.huge::after { font-size: 32px; }
+.pv-video.tiny::after { font-size: 12px; }
+
+/* Sample cards */
+.pv-card { position: absolute; background: rgba(20,22,30,0.78); border: 1px solid rgba(255,255,255,0.18); border-radius: 4px; padding: 4px 6px; font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 700; letter-spacing: 0.14em; color: var(--text-paper); text-transform: uppercase; display: flex; flex-direction: column; gap: 3px; opacity: 0.82; }
+.pv-card .pv-thumb { height: 38px; border-radius: 2px; position: relative; }
+.pv-card.c-polaroid { background: rgba(245,232,220,0.85); color: #1a1a1a; border-color: rgba(255,255,255,0.4); }
+.pv-card.c-polaroid .pv-thumb { background: linear-gradient(135deg, #1a1a1a 0%, #2a2624 60%, #6b5a3a 100%); }
+.pv-card.c-editorial .pv-thumb { background: radial-gradient(circle at 50% 30%, rgba(255,107,26,0.6), transparent 65%), #2a1a14; }
+.pv-card.c-comics .pv-thumb { background: repeating-linear-gradient(45deg, rgba(34,211,238,0.18) 0 3px, transparent 3px 6px), #16323a; }
+.pv-card.c-product .pv-thumb { background: radial-gradient(circle at 50% 60%, rgba(139,92,246,0.6), transparent 60%), #2a1d4a; }
+
+/* Left text panel */
+.pv-panel { position: absolute; display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 0 4px; font-family: 'Outfit', sans-serif; color: var(--text); }
+.pv-panel .pv-num { font-family: 'JetBrains Mono', monospace; font-size: 7px; font-weight: 700; letter-spacing: 0.18em; color: var(--c, var(--violet)); text-transform: uppercase; }
+.pv-panel .pv-title { font-family: 'Instrument Serif', serif; font-size: 28px; line-height: 0.96; color: var(--text-paper); }
+.pv-panel .pv-title em { font-style: italic; color: var(--c, var(--violet)); }
+.pv-panel .pv-body { font-size: 9px; color: var(--text-dim); line-height: 1.4; font-weight: 300; }
+.pv-panel.violet { --c: var(--violet); } .pv-panel.cyan { --c: var(--cyan); } .pv-panel.teal { --c: var(--teal); } .pv-panel.amber { --c: var(--amber); } .pv-panel.pink { --c: var(--pink); }
+
+/* Center-stage placeholder */
+.pv-stage { position: absolute; background: rgba(20,22,30,0.55); border: 1px dashed rgba(255,255,255,0.22); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.18em; color: var(--text-dim); text-transform: uppercase; }
+
+/* Watermark + tag in preview */
+.pv-watermark { position: absolute; bottom: 8px; left: 8px; display: flex; align-items: center; gap: 4px; padding: 3px 7px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 6px; font-weight: 700; letter-spacing: 0.18em; color: var(--text-dim); }
+.pv-watermark .hex { width: 6px; height: 6px; background: var(--accent); clip-path: polygon(50% 5%, 93% 28%, 93% 72%, 50% 95%, 7% 72%, 7% 28%); }
+.pv-tag { position: absolute; bottom: 8px; right: 8px; padding: 3px 7px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,107,26,0.4); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 6px; font-weight: 700; letter-spacing: 0.18em; color: var(--accent); text-transform: uppercase; }
+
+/* Outro frame in preview */
+.pv-outro { position: absolute; inset: 60px; border: 1px solid rgba(255,107,26,0.28); border-radius: 8px; background: linear-gradient(135deg, rgba(255,107,26,0.08), rgba(139,92,246,0.05)); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; font-family: 'Instrument Serif', serif; font-style: italic; color: var(--text-paper); padding: 24px; text-align: center; }
+.pv-outro .q { font-size: 18px; line-height: 1.2; }
+.pv-outro .q .hl { color: var(--accent); }
+.pv-outro .a { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.18em; color: var(--text-dim); text-transform: uppercase; font-style: normal; }
+
+/* Annotations */
+.pv-arrow { position: absolute; pointer-events: none; }
+.pv-label { position: absolute; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.14em; color: var(--c, var(--accent)); text-transform: uppercase; background: rgba(0,0,0,0.7); padding: 3px 7px; border-radius: 4px; border: 1px solid var(--c, var(--accent)); white-space: nowrap; pointer-events: none; }
+
+/* NOTES panel */
+.notes { display: flex; flex-direction: column; gap: 18px; padding: 8px 4px; }
+.notes h3 { font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.18em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px; }
+.notes ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.notes li { font-size: 14px; color: var(--text); line-height: 1.5; padding-left: 14px; position: relative; }
+.notes li::before { content: ''; position: absolute; left: 0; top: 9px; width: 6px; height: 6px; background: var(--c, var(--accent)); border-radius: 50%; }
+.notes li strong { color: var(--text-paper); font-weight: 600; }
+.notes li code, .notes code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: rgba(255,255,255,0.05); padding: 1px 6px; border-radius: 4px; color: var(--text-paper); }
+.notes .timing-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.notes .timing-bar .row { display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+.notes .timing-bar .row .k { color: var(--text-dim); letter-spacing: 0.12em; text-transform: uppercase; }
+.notes .timing-bar .row .v { color: var(--c, var(--accent)); font-weight: 700; }
+
+.next-trans { grid-column: 1 / -1; margin-top: 16px; padding: 12px 16px; border-top: 1px dashed var(--border); display: flex; align-items: center; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.18em; color: var(--text-dim); text-transform: uppercase; }
+.next-trans .arrow { color: var(--c, var(--accent)); font-size: 14px; }
+
+.footer { margin-top: 100px; padding: 28px; border: 1px solid var(--border); border-radius: 14px; background: rgba(255,255,255,0.02); text-align: center; }
+.footer .fn-quote { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 22px; color: var(--text-paper); line-height: 1.3; margin-bottom: 12px; }
+.footer .fn-attr { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.18em; color: var(--text-dim); text-transform: uppercase; }
+</style>
+</head>
+<body>
+<canvas id="hexBg"></canvas>
+<div class="wrap">
+
+<!-- ============================== HEADER (CUSTOMIZE) ============================== -->
+<div class="kicker">
+  <svg viewBox="0 0 100 100"><polygon points="50,5 93,28 93,72 50,95 7,72 7,28" fill="#ff6b1a"/></svg>
+  Storyboard · [PROJECT TITLE]
+</div>
+<h1 class="display">Motion <em>Plan</em></h1>
+<p class="subtitle">[X] scenes, [Y]s total. Each scene shows the on-screen layout, what moves where, and timing. Mark up freely  -  once we lock the plan, I build the composition once with everything right.</p>
+<div class="meta-row">
+  <span class="meta-pill"><strong>[X]</strong> scenes</span>
+  <span class="meta-pill violet"><strong>[Y]s</strong> total</span>
+  <span class="meta-pill"><strong>1920×1080</strong> · [fps]fps</span>
+</div>
+
+<div class="toc">
+  <a href="#s1">S1</a>
+  <a href="#s2">S2</a>
+  <a href="#s3">S3</a>
+  <a href="#outro">Outro</a>
+</div>
+
+<!-- TIMELINE BAR  -  set flex values to match scene durations (e.g. 5s scene = flex: 5) -->
+<div class="timeline-bar">
+  <div class="seg s1" style="flex: 5;">S1 · Hook<span class="dur">0-5s</span></div>
+  <div class="seg s2" style="flex: 7;">S2 · Body<span class="dur">5-12s</span></div>
+  <div class="seg s3" style="flex: 5;">S3 · Build<span class="dur">12-17s</span></div>
+  <div class="seg outro" style="flex: 3;">Outro<span class="dur">17-20s</span></div>
+</div>
+
+<!-- ============================== SCENE 1 (CUSTOMIZE) ============================== -->
+<section id="s1" class="scene s1">
+  <div class="scene-head">
+    <div>
+      <div class="scene-num">Scene 01 · Hook</div>
+      <h2>One-line scene <em>title</em>.</h2>
+    </div>
+    <div class="scene-time">0.0s → 5.0s · 5.0s</div>
+  </div>
+
+  <div class="preview">
+    <!-- Video full-screen example -->
+    <div class="pv-video huge" style="top: 0; left: 0; width: 880px; height: 495px;"></div>
+
+    <!-- Sample cards floating in corners -->
+    <div class="pv-card c-polaroid" style="top: 60px; right: 30px; width: 130px; transform: rotate(-4deg);">
+      <div class="pv-thumb"></div><div>Polaroid · 01</div>
+    </div>
+    <div class="pv-card c-editorial" style="top: 290px; right: 18px; width: 130px; transform: rotate(5deg);">
+      <div class="pv-thumb"></div><div>Editorial · 02</div>
+    </div>
+
+    <div class="pv-watermark"><span class="hex"></span>ROBOLABS</div>
+    <div class="pv-tag">[Project] · Tag</div>
+  </div>
+
+  <div class="notes">
+    <div>
+      <h3>What's on screen</h3>
+      <ul>
+        <li>Describe each persistent element on screen.</li>
+        <li>Mention any <strong>opacity</strong> / <code>filter</code> notes.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Motion</h3>
+      <ul>
+        <li>Describe entry: e.g. <code>polaroid-drop</code> staggered 0.4 / 0.8 / 1.2 / 1.6s.</li>
+        <li>Describe sustained motion: bob, pulse, sweep.</li>
+        <li>Audio cue if relevant.</li>
+      </ul>
+    </div>
+    <div class="timing-bar">
+      <div class="row"><span class="k">Card 1 in</span><span class="v">0.4s</span></div>
+      <div class="row"><span class="k">All visible</span><span class="v">2.5-5.0s</span></div>
+    </div>
+  </div>
+
+  <div class="next-trans">
+    <span>Next · transition note</span>
+    <span class="arrow">→ S2</span>
+  </div>
+</section>
+
+<!-- ============================== SCENE 2 (9:16 CENTERED EXAMPLE) ============================== -->
+<section id="s2" class="scene s2">
+  <div class="scene-head">
+    <div>
+      <div class="scene-num">Scene 02 · Body</div>
+      <h2>9:16 <em>centered</em>. Left text panel.</h2>
+    </div>
+    <div class="scene-time">5.0s → 12.0s · 7.0s</div>
+  </div>
+
+  <div class="preview">
+    <!-- 9:16 box centered: 880*(608/1920) = 279, top: 0, left: 880*(656/1920) = 300 -->
+    <div class="pv-video" style="top: 0; left: 300px; width: 279px; height: 495px; border-radius: 10px; border: 1px solid #2e3244;"></div>
+
+    <div class="pv-panel violet" style="top: 90px; left: 30px; width: 250px; height: 310px;">
+      <div class="pv-num">02  -  [Beat]</div>
+      <div class="pv-title">Body <em>title</em>.</div>
+      <div class="pv-body">Supporting line goes here.</div>
+    </div>
+
+    <div class="pv-watermark"><span class="hex"></span>ROBOLABS</div>
+    <div class="pv-tag">[Project] · Tag</div>
+  </div>
+
+  <div class="notes">
+    <div>
+      <h3>What's on screen</h3>
+      <ul>
+        <li>Video in <strong>9:16 centered box</strong> (608×1080 @ left:656).</li>
+        <li>Left panel (540×680 @ left:80, top:200)  -  beat number + italic title + body.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Motion (per beat)</h3>
+      <ul>
+        <li><code>.lp-num</code> slide-from-left fade (0.45s)</li>
+        <li><code>.lp-title</code> slide-up-fade (0.6s, +0.25s)</li>
+        <li><code>.lp-body</code> slide-up-fade (0.5s, +0.6s)</li>
+      </ul>
+    </div>
+    <div class="timing-bar">
+      <div class="row"><span class="k">Beat 02</span><span class="v">5.0-12.0s</span></div>
+    </div>
+  </div>
+
+  <div class="next-trans">
+    <span>Next · scene 3</span>
+    <span class="arrow">→ S3</span>
+  </div>
+</section>
+
+<!-- ============================== SCENE 3 (CORNER CAM EXAMPLE) ============================== -->
+<section id="s3" class="scene s3">
+  <div class="scene-head">
+    <div>
+      <div class="scene-num">Scene 03 · Build</div>
+      <h2>Corner cam · <em>action</em> in center.</h2>
+    </div>
+    <div class="scene-time">12.0s → 17.0s · 5.0s</div>
+  </div>
+
+  <div class="preview">
+    <div class="pv-video tiny" style="bottom: 50px; right: 50px; width: 150px; height: 230px; border-radius: 6px; border: 1px solid #2e3244;"></div>
+
+    <div class="pv-stage" style="top: 80px; left: 130px; width: 580px; height: 280px;">center stage</div>
+
+    <div class="pv-watermark"><span class="hex"></span>ROBOLABS</div>
+    <div class="pv-tag">[Project] · Tag</div>
+  </div>
+
+  <div class="notes">
+    <div>
+      <h3>What's on screen</h3>
+      <ul>
+        <li>Corner cam bottom-right (~360×640 @ right:60, bottom:60).</li>
+        <li>Center stage available for whatever the beat needs (cards, diagrams, demo).</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Motion</h3>
+      <ul>
+        <li>Box <code>corner-cam</code> transition (0.5s).</li>
+        <li>Center content fades up.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="next-trans">
+    <span>Next · outro</span>
+    <span class="arrow">→ Outro</span>
+  </div>
+</section>
+
+<!-- ============================== OUTRO (CUSTOMIZE) ============================== -->
+<section id="outro" class="scene outro">
+  <div class="scene-head">
+    <div>
+      <div class="scene-num">Outro</div>
+      <h2>Quote · <em>RoboLabs</em>.</h2>
+    </div>
+    <div class="scene-time">17.0s → 20.0s · 3.0s</div>
+  </div>
+
+  <div class="preview">
+    <div class="pv-outro">
+      <div class="q">"A closing line with a <span class="hl">key word</span> emphasized."</div>
+      <div class="a">RoboLabs · [Project tag]</div>
+    </div>
+    <div class="pv-watermark"><span class="hex"></span>ROBOLABS</div>
+  </div>
+
+  <div class="notes">
+    <div>
+      <h3>What's on screen</h3>
+      <ul>
+        <li>Outro frame fades in  -  italic Instrument Serif quote with orange highlight.</li>
+        <li>Attribution line underneath.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Motion</h3>
+      <ul>
+        <li>Frame <code>pop-in-scale</code> (0.7s).</li>
+        <li>Quote <code>slide-up-fade</code> (0.55s, +0.3s).</li>
+        <li>Attribution <code>slide-up-fade</code> (0.45s, +0.9s).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div class="footer">
+  <div class="fn-quote">"Plan tight, render once."</div>
+  <div class="fn-attr">RoboLabs · Storyboard</div>
+</div>
+
+</div>
+
+<script>
+const canvas = document.getElementById('hexBg');
+const ctx = canvas.getContext('2d');
+let W, H, t = 0;
+function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+resize(); addEventListener('resize', resize);
+function drawHex() {
+  ctx.clearRect(0, 0, W, H);
+  const cell = 24;
+  const hexW = cell * Math.sqrt(3);
+  const hexH = cell * 1.5;
+  ctx.save();
+  ctx.translate(W / 2, H / 2); ctx.rotate(t * 0.00008); ctx.translate(-W / 2, -H / 2);
+  for (let y = -hexH; y < H + hexH; y += hexH) {
+    for (let x = -hexW; x < W + hexW; x += hexW) {
+      const off = (Math.round(y / hexH) % 2) * (hexW / 2);
+      const cx = x + off, cy = y;
+      const dx = (cx - W / 2) / W, dy = (cy - H / 2) / H;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      const fade = Math.max(0, 1 - Math.pow(d * 1.5, 2));
+      ctx.strokeStyle = `rgba(255,255,255,${0.06 * fade})`;
+      ctx.lineWidth = 0.6;
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const ang = Math.PI / 3 * i + Math.PI / 6;
+        const px = cx + cell * Math.cos(ang);
+        const py = cy + cell * Math.sin(ang);
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath(); ctx.stroke();
+    }
+  }
+  ctx.restore();
+  t++;
+  requestAnimationFrame(drawHex);
+}
+drawHex();
+</script>
+</body>
+</html>

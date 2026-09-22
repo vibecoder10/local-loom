@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Talking head 9:16 (Animate, What We Built style)</title>
+<!--
+  Ryan-styled 9:16 short built from a camera-only Local Loom take package.
+  scripts/build-short.mjs replaces __DATA__ / __DURATION__ / __CAMERA__ and writes index.html. Edit scene-plan.json, not this file.
+  Everything on the timeline is a pure function of time: no timers, no randomness, no clock.
+-->
+<style>
+@font-face{font-family:Inter;src:url('assets/inter-800.woff2');font-weight:800}
+@font-face{font-family:Inter;src:url('assets/inter-500.woff2');font-weight:500}
+@font-face{font-family:Pixelify;src:url('assets/pixelify-700.woff2');font-weight:700}
+:root{--ink:#161819;--paper:#D9DCDF;--paper2:#EEF0F2;--accent:#E65D20;--grey:#6D747A;--grey2:#A7ADB2}
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--paper);font-family:Inter,sans-serif}
+#root{position:relative;width:100%;height:100%;overflow:hidden;background:var(--paper);color:var(--ink)}
+#grid{position:absolute;inset:0;background-image:linear-gradient(rgba(167,173,178,.28) 1px,transparent 1px),linear-gradient(90deg,rgba(167,173,178,.28) 1px,transparent 1px);background-size:12px 12px}
+.clip{position:absolute}
+#cam{position:absolute;overflow:hidden;background:#000;border:0 solid var(--ink);box-shadow:16px 16px 0 var(--accent)}
+#camVid{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover}
+#progt{position:absolute;left:64px;top:44px;width:952px;height:12px;background:var(--grey2);opacity:.55}
+#prog{position:absolute;left:0;top:0;bottom:0;width:100%;background:var(--accent);transform-origin:0 50%}
+/*__PANEL_KIT_CSS__*/
+#caps{position:absolute;display:flex;align-items:center;justify-content:center}
+.cap{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;opacity:0}
+.capbox{max-width:100%;padding:12px 26px 14px;font-size:50px;line-height:1.15;font-weight:800;letter-spacing:-1px;text-align:center;white-space:normal;color:var(--ink)}
+.plate .capbox{background:var(--paper2);border:3px solid var(--ink);box-shadow:8px 8px 0 var(--ink)}
+.noplate .capbox{font-size:64px;color:var(--paper2);-webkit-text-stroke:11px var(--ink);paint-order:stroke fill}
+.w{color:var(--grey);display:inline-block;white-space:pre;transform-origin:50% 100%;opacity:0}
+.noplate .w{color:var(--paper2)}
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="__DURATION__" data-width="1080" data-height="1920">
+  <div id="grid"></div>
+  <div id="progt"><div id="prog"></div></div>
+  <div id="cam">
+    <video id="camVid" class="clip" src="__CAMERA__" data-start="0" data-duration="__DURATION__" data-track-index="0" muted playsinline></video>
+  </div>
+  <div id="caps" class="plate"></div>
+  <audio id="voice" class="clip" src="__CAMERA__" data-start="0" data-duration="__DURATION__" data-track-index="1"></audio>
+</div>
+<script src="assets/gsap.min.js"></script>
+<script>
+/*__DATA__*/
+(() => {
+/*__PANEL_KIT_JS__*/
+  const T = 0.4, EASE = 'expo.inOut';
+  const { layout: L, plan, captions, duration } = DATA;
+  const $ = (id) => document.getElementById(id);
+  const root = $('root'), cam = $('cam'), caps = $('caps');
+  const tl = gsap.timeline({ paused: true });
+  // video=0, voice=1 (declared above) leave 2-5 free for the house sound effects.
+  const SFX_TRACKS = { title: 2, count: 3, lock: 4, cut: 5 };
+  const put = (el, r) => Object.assign(el.style, { left: r.x + 'px', top: r.y + 'px', width: r.w + 'px', height: r.h + 'px' });
+  const box4 = (r) => ({ left: r.x, top: r.y, width: r.w, height: r.h });
+  put(caps, L.capsPlate);
+
+  // ---- camera states (one <video>, resized between states; never crossfaded) ----
+  const P = L.plate;
+  const camStates = {
+    plate: { left: P.x, top: P.y, width: P.w, height: P.h, borderWidth: 5, boxShadow: '16px 16px 0 #E65D20' },
+    full: { left: 0, top: 0, width: 1080, height: 1920, borderWidth: 0, boxShadow: '0px 0px 0 #E65D20' },
+  };
+  const stateFor = (scene) => (scene.type === 'presenter' ? 'full' : 'plate');
+  const scenes = plan.scenes;
+  const blur = (el, at) => { tl.fromTo(el, { filter: 'blur(0px)' }, { filter: 'blur(9px)', duration: T / 2, ease: 'sine.out' }, at).to(el, { filter: 'blur(0px)', duration: T / 2, ease: 'sine.in' }, at + T / 2); };
+
+  // ---- top panels: built by the shared kit; every element moves on the word that explains it ----
+  const OFF_L = -1300, OFF_R = 1300;
+  scenes.forEach((scene, i) => {
+    if (scene.type !== 'split') return;
+    buildPanel(scene, i, { root, before: caps, tl, T, EASE, DATA, rect: L.panel, innerW: 808, startX: i === 0 ? 0 : OFF_R, sfx: SFX_TRACKS });
+  });
+
+  // ---- always-moving layer: progress bar, drifting pixel grid, floating plate ----
+  gsap.set($('prog'), { scaleX: 0 }); tl.to($('prog'), { scaleX: 1, duration, ease: 'none' }, 0);
+  tl.fromTo($('grid'), { backgroundPosition: '0px 0px' }, { backgroundPosition: '-' + Math.round(duration * 10 / 12) * 12 + 'px -' + Math.round(duration * 10 / 12) * 12 + 'px', duration, ease: 'none' }, 0);
+  { const hops = Math.max(2, Math.floor(duration / 1.7)); tl.to(cam, { y: -7, duration: 1.7, yoyo: true, repeat: hops % 2 ? hops : hops + 1, ease: 'sine.inOut' }, 0); }
+
+  // ---- scene transitions ----
+  gsap.set(cam, camStates[stateFor(scenes[0])]);
+  let capsClass = null;
+  scenes.forEach((scene, i) => {
+    const at = scene.start; const state = stateFor(scene);
+    if (i > 0) {
+      const prev = scenes[i - 1];
+      tl.to(cam, { ...camStates[state], duration: T, ease: EASE }, at); blur(cam, at);
+      if (scene.type === 'split') { tl.to(scene.panel, { x: 0, duration: T, ease: EASE }, at); blur(scene.panel, at); }
+      if (prev.type === 'split') tl.to(prev.panel, { x: OFF_L, duration: T, ease: EASE }, at);
+      playSfx(root, caps, 'cut', at, SFX_TRACKS.cut);
+    }
+    const cls = scene.type === 'presenter' ? 'noplate' : 'plate';
+    if (cls !== capsClass) { tl.set(caps, { className: cls, ...box4(cls === 'noplate' ? L.capsFull : L.capsPlate) }, at); capsClass = cls; }
+  });
+
+  // ---- captions from take-package words (word highlight is a timeline colour set, never a timer) ----
+  if (plan.captions && plan.captions.enabled !== false) {
+    captions.forEach((group, g) => {
+      const el = document.createElement('div'); el.className = 'cap'; el.id = 'cap' + g;
+      const box = document.createElement('div'); box.className = 'capbox';
+      const spans = group.words.map((w) => { const s = document.createElement('span'); s.className = 'w'; s.textContent = w.text + ' '; box.appendChild(s); return s; });
+      el.appendChild(box); caps.appendChild(el);
+      tl.set(el, { opacity: 1 }, group.start).set(el, { opacity: 0 }, group.end);
+      // Spoken words settle to ink on a plate but to paper on the ink-stroked full-screen captions (ink-on-ink would vanish),
+      // and a group can straddle a scene change, so words already done are re-coloured at each boundary.
+      const doneAt = (t) => { const sc = scenes.find((q) => t >= q.start && t < q.end) || scenes[scenes.length - 1]; return sc.type === 'presenter' ? '#EEF0F2' : '#161819'; };
+      group.words.forEach((w, k) => {
+        // Words must not be legible before they're spoken (no reading ahead of the voice): fade/pop each one in at its own start, not just recolour it.
+        tl.fromTo(spans[k], { opacity: 0, y: 6 }, { opacity: 1, y: -4, duration: 0.12, ease: 'back.out(2)' }, w.start).set(spans[k], { color: '#E65D20' }, w.start).set(spans[k], { color: doneAt(w.end - 0.001), y: 0 }, w.end);
+        scenes.forEach((sc) => { if (sc.start > w.end && sc.start < group.end) tl.set(spans[k], { color: doneAt(sc.start) }, sc.start); });
+      });
+    });
+  }
+
+  window.__timelines = window.__timelines || {};
+  window.__timelines['main'] = tl;
+})();
+</script>
+</body>
+</html>

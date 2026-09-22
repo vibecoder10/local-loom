@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Source+Serif+4:ital,wght@0,400;0,600;1,400;1,600&family=JetBrains+Mono:wght@400;500;700&display=block"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { background: transparent; overflow: hidden; }
+      body { width: 1920px; height: 1080px; font-family: "Outfit", sans-serif; color: #FFFFFF; }
+
+      [data-composition-id="intro"] {
+        width: 1920px; height: 1080px;
+        background: #000000;
+        overflow: hidden;
+        position: relative;
+        font-family: "Outfit", sans-serif;
+      }
+
+      [data-composition-id="intro"] canvas.shader {
+        position: absolute; inset: 0;
+        width: 100%; height: 100%;
+        z-index: 1;
+      }
+
+      [data-composition-id="intro"] canvas.globe {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 900px; height: 900px;
+        z-index: 5;
+        opacity: 0;
+      }
+
+      [data-composition-id="intro"] .copy-stack {
+        position: absolute;
+        top: 50%; left: 80px;
+        transform: translateY(-50%);
+        max-width: 600px;
+        z-index: 10;
+        opacity: 0;
+      }
+
+      [data-composition-id="intro"] .copy-kicker {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.28em;
+        color: #ff6b1a;
+        text-transform: uppercase;
+        margin-bottom: 24px;
+        display: inline-flex; align-items: center; gap: 12px;
+        padding: 8px 16px;
+        background: rgba(255,107,26,0.06);
+        border: 1px solid rgba(255,107,26,0.22);
+        border-radius: 100px;
+      }
+
+      [data-composition-id="intro"] .copy-kicker .hex { width: 14px; height: 14px; }
+
+      [data-composition-id="intro"] .copy-headline {
+        font-family: "Source Serif 4", serif;
+        font-weight: 400;
+        font-size: 68px;
+        line-height: 1.05;
+        letter-spacing: -0.02em;
+        color: #f1ece0;
+      }
+
+      [data-composition-id="intro"] .copy-headline em {
+        font-style: italic;
+        background: linear-gradient(180deg, #ff8b3a, #ff6b1a);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      [data-composition-id="intro"] .copy-sub {
+        font-family: "Outfit", sans-serif;
+        font-size: 22px;
+        font-weight: 300;
+        line-height: 1.5;
+        color: rgba(255,255,255,0.65);
+        margin-top: 24px;
+        max-width: 540px;
+      }
+
+      [data-composition-id="intro"] .vignette {
+        position: absolute; inset: 0;
+        background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.6) 100%);
+        pointer-events: none;
+        z-index: 6;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="intro"
+      data-width="1920"
+      data-height="1080"
+      data-start="0"
+      data-duration="15"
+    >
+      <canvas id="shader-canvas" class="shader" width="1920" height="1080"></canvas>
+      <canvas id="globe-canvas" class="globe" width="900" height="900"></canvas>
+      <div class="vignette"></div>
+
+      <div id="copy-stack" class="copy-stack">
+        <div class="copy-kicker">
+          <svg class="hex" viewBox="0 0 100 100"><polygon points="50,5 93,28 93,72 50,95 7,72 7,28" fill="#ff6b1a"/></svg>
+          ROBONUGGETS · COMMUNITY
+        </div>
+        <div class="copy-headline">The most <em>complete</em> agentic course on the globe.</div>
+        <div class="copy-sub">Six modules. Tool-agnostic. The mental model behind every AI agent  -  so every new launch just clicks.</div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+
+      // ============================================================
+      // SHADER (beat 0-5.5s, fades out by 6s)
+      // ============================================================
+      var shaderCanvas = document.getElementById("shader-canvas");
+      var gl = shaderCanvas.getContext("webgl");
+      var shaderState = { time: 0 };
+
+      var vsSource = "attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}";
+      var fsSource = [
+        "precision highp float;",
+        "uniform vec2 resolution;",
+        "uniform float time;",
+        "void main(void) {",
+        "  vec2 uv = (gl_FragCoord.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);",
+        "  float t = time * 0.025;", // Half speed (was 0.05)
+        "  float lineWidth = 0.002;",
+        "  vec3 color = vec3(0.0);",
+        "  for (int j = 0; j < 3; j++) {",
+        "    for (int i = 0; i < 5; i++) {",
+        "      color[j] += lineWidth * float(i*i) / abs(",
+        "        fract(t - 0.01*float(j) + float(i)*0.01) * 5.0",
+        "        - length(uv)",
+        "        + mod(uv.x + uv.y, 0.2)",
+        "      );",
+        "    }",
+        "  }",
+        "  gl_FragColor = vec4(color[0], color[1], color[2], 1.0);",
+        "}"
+      ].join("\n");
+
+      function compile(type, src) {
+        var s = gl.createShader(type);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        return s;
+      }
+
+      var prog = gl.createProgram();
+      gl.attachShader(prog, compile(gl.VERTEX_SHADER, vsSource));
+      gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fsSource));
+      gl.linkProgram(prog);
+      gl.useProgram(prog);
+
+      var quad = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+      var aLoc = gl.getAttribLocation(prog, "a");
+      gl.enableVertexAttribArray(aLoc);
+      gl.vertexAttribPointer(aLoc, 2, gl.FLOAT, false, 0, 0);
+      var uRes = gl.getUniformLocation(prog, "resolution");
+      var uTime = gl.getUniformLocation(prog, "time");
+      gl.viewport(0, 0, 1920, 1080);
+      gl.uniform2f(uRes, 1920, 1080);
+
+      function drawShader() {
+        gl.uniform1f(uTime, shaderState.time);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      }
+
+      // Drive shader time deterministically via GSAP
+      tl.to(shaderState, {
+        time: 100,
+        duration: 15,
+        ease: "none",
+        onUpdate: drawShader
+      }, 0);
+
+      // Fade shader canvas out around 5-6s
+      tl.fromTo(shaderCanvas,
+        { opacity: 1 },
+        { opacity: 0, duration: 1.5, ease: "power2.inOut" },
+        4.5
+      );
+
+      // ============================================================
+      // GLOBE (beat 4-15s)
+      // ============================================================
+      var globeCanvas = document.getElementById("globe-canvas");
+      var gctx = globeCanvas.getContext("2d");
+      var dpr = 2; // we sized 900x900 attributes; for crispness scale via CSS only
+      // Note: keeping 1:1 to avoid context complexity.
+      var globeState = { rotation: 0, scale: 1 };
+      var landData = null;
+
+      // Project setup using d3
+      var projection = d3.geoOrthographic()
+        .scale(380)
+        .translate([450, 450])
+        .clipAngle(90);
+
+      var geoPath = d3.geoPath(projection, gctx);
+      var graticule = d3.geoGraticule10();
+
+      function drawGlobe() {
+        gctx.clearRect(0, 0, 900, 900);
+        projection.rotate([globeState.rotation, -10, 0]);
+
+        // Sphere outline
+        gctx.beginPath();
+        geoPath({type: "Sphere"});
+        gctx.fillStyle = "#000";
+        gctx.fill();
+        gctx.strokeStyle = "rgba(255,255,255,0.85)";
+        gctx.lineWidth = 1.2;
+        gctx.stroke();
+
+        // Graticule
+        gctx.beginPath();
+        geoPath(graticule);
+        gctx.strokeStyle = "rgba(255,255,255,0.18)";
+        gctx.lineWidth = 0.6;
+        gctx.stroke();
+
+        // Land outline
+        if (landData) {
+          gctx.beginPath();
+          geoPath(landData);
+          gctx.strokeStyle = "#FFFFFF";
+          gctx.lineWidth = 1.2;
+          gctx.stroke();
+
+          // Halftone dots inside continents
+          drawHalftoneDots();
+        }
+      }
+
+      // Precomputed land points  -  populated once at load time.
+      var landPoints = [];
+
+      function precomputeLandPoints() {
+        if (!landData) return;
+        var dotSpacing = 16;
+        var step = 0.08 * dotSpacing; // ~1.28 degrees
+        for (var lat = -88; lat <= 88; lat += step) {
+          for (var lng = -180; lng <= 180; lng += step) {
+            if (d3.geoContains(landData, [lng, lat])) {
+              landPoints.push([lng, lat]);
+            }
+          }
+        }
+      }
+
+      function drawHalftoneDots() {
+        if (landPoints.length === 0) return;
+        gctx.fillStyle = "#999999";
+        for (var i = 0; i < landPoints.length; i++) {
+          var p = projection(landPoints[i]);
+          if (!p || isNaN(p[0]) || isNaN(p[1])) continue;
+          gctx.beginPath();
+          gctx.arc(p[0], p[1], 1.0, 0, Math.PI * 2);
+          gctx.fill();
+        }
+      }
+
+      // Load land data
+      fetch("../assets/ne_110m_land.json")
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          landData = data;
+          precomputeLandPoints();
+          drawGlobe();
+        })
+        .catch(function (e) { console.error("Globe load fail", e); });
+
+      // Globe enters  -  fade in from 4s, rotates over duration
+      tl.fromTo(globeCanvas,
+        { opacity: 0, scale: 0.85 },
+        { opacity: 1, scale: 1, duration: 1.6, ease: "expo.out" },
+        4.0
+      );
+
+      // Drive globe rotation deterministically via GSAP
+      tl.to(globeState, {
+        rotation: 200,
+        duration: 11,
+        ease: "none",
+        onUpdate: drawGlobe
+      }, 4.0);
+
+      // Subtle globe breathe
+      tl.to(globeCanvas, {
+        scale: 1.03,
+        duration: 5,
+        yoyo: true,
+        repeat: 1,
+        ease: "sine.inOut"
+      }, 6.0);
+
+      // ============================================================
+      // COPY STACK (5.5s onward)
+      // ============================================================
+      var copyStack = document.getElementById("copy-stack");
+      tl.fromTo(copyStack,
+        { opacity: 0, x: -50, filter: "blur(20px)" },
+        { opacity: 1, x: 0, filter: "blur(0px)", duration: 1.2, ease: "expo.out" },
+        5.5
+      );
+
+      // Subtle copy breathe
+      tl.to(copyStack, {
+        x: 4,
+        duration: 3.5,
+        yoyo: true,
+        repeat: 1,
+        ease: "sine.inOut"
+      }, 7.5);
+
+      // Exit
+      tl.to([globeCanvas, copyStack], {
+        opacity: 0,
+        scale: 0.95,
+        duration: 0.8,
+        ease: "power2.in"
+      }, 14.2);
+
+      tl.set([globeCanvas, copyStack], { opacity: 0, visibility: "hidden" }, 14.95);
+
+      window.__timelines["intro"] = tl;
+    </script>
+  </body>
+</html>

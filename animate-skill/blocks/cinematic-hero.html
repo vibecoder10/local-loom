@@ -1,0 +1,780 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500;700&display=block"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { background: transparent; overflow: hidden; }
+      body { width: 1920px; height: 1080px; font-family: "Outfit", sans-serif; color: #FFFFFF; }
+
+      [data-composition-id="cinematic-hero-puvindren"] {
+        width: 1920px; height: 1080px;
+        background: #050507;
+        overflow: hidden;
+        position: relative;
+        font-family: "Outfit", sans-serif;
+      }
+
+      /* ------ ENVIRONMENT OVERLAYS ------ */
+      [data-composition-id="cinematic-hero-puvindren"] .grid-bg {
+        position: absolute; inset: 0;
+        background-size: 80px 80px;
+        background-image:
+          linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
+        mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
+        -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
+        z-index: 1;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .grain {
+        position: absolute; inset: 0;
+        opacity: 0.07; mix-blend-mode: overlay;
+        background-image:
+          radial-gradient(900px at 25% 20%, rgba(255,255,255,0.03), transparent 60%),
+          radial-gradient(700px at 75% 80%, rgba(255,255,255,0.02), transparent 60%);
+        pointer-events: none;
+        z-index: 60;
+      }
+
+      /* ------ HERO TEXT (Phase 1) ------ */
+      [data-composition-id="cinematic-hero-puvindren"] .hero-text {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 10;
+        text-align: center;
+        width: 100%;
+        padding: 0 80px;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .hero-line-1 {
+        font-family: "Outfit", sans-serif;
+        font-weight: 700;
+        font-size: 110px;
+        line-height: 1.0;
+        letter-spacing: -0.04em;
+        color: #FFFFFF;
+        text-shadow:
+          0 10px 40px rgba(255,255,255,0.15),
+          0 2px 4px rgba(255,255,255,0.05);
+        margin-bottom: 4px;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .hero-line-2 {
+        font-family: "Outfit", sans-serif;
+        font-weight: 800;
+        font-size: 130px;
+        line-height: 1.0;
+        letter-spacing: -0.05em;
+        background: linear-gradient(180deg, #FFFFFF 0%, #71717A 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        filter: drop-shadow(0 12px 24px rgba(255,255,255,0.1));
+      }
+
+      /* ------ MAIN CARD (Phase 2-4) ------ */
+      [data-composition-id="cinematic-hero-puvindren"] .main-card {
+        position: absolute;
+        top: 50%; left: 50%;
+        margin-left: -816px; margin-top: -460px;
+        width: 1632px; height: 920px;
+        border-radius: 40px;
+        background: linear-gradient(145deg, #0d2818 0%, #050a0f 100%);
+        box-shadow:
+          0 60px 140px -20px rgba(0,0,0,0.95),
+          0 30px 60px -20px rgba(0,0,0,0.8),
+          inset 0 1px 2px rgba(255,255,255,0.18),
+          inset 0 -2px 4px rgba(0,0,0,0.8);
+        border: 1px solid rgba(255,255,255,0.04);
+        overflow: hidden;
+        z-index: 20;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .card-sheen {
+        position: absolute; inset: 0;
+        background: radial-gradient(900px at 30% 30%, rgba(81,140,22,0.10), transparent 50%);
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .card-content {
+        position: absolute; inset: 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        align-items: center;
+        gap: 40px;
+        padding: 60px 80px;
+        z-index: 2;
+      }
+
+      /* ------ CARD LEFT TEXT ------ */
+      [data-composition-id="cinematic-hero-puvindren"] .card-left {
+        z-index: 3;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .card-heading {
+        font-family: "Outfit", sans-serif;
+        font-weight: 700;
+        font-size: 48px;
+        line-height: 1.1;
+        color: #FFFFFF;
+        letter-spacing: -0.025em;
+        margin-bottom: 24px;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .card-desc {
+        font-family: "Geist", sans-serif;
+        font-weight: 400;
+        font-size: 20px;
+        line-height: 1.55;
+        color: rgba(220,255,210,0.65);
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .card-desc strong {
+        color: #FFFFFF;
+        font-weight: 600;
+      }
+
+      /* ------ IPHONE MOCKUP ------ */
+      [data-composition-id="cinematic-hero-puvindren"] .mockup-stage {
+        position: relative;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .mockup {
+        width: 340px; height: 700px;
+        border-radius: 56px;
+        background: #111;
+        box-shadow:
+          inset 0 0 0 2px #52525B,
+          inset 0 0 0 8px #000,
+          0 50px 100px -15px rgba(0,0,0,0.95),
+          0 20px 40px -5px rgba(0,0,0,0.7);
+        position: relative;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .mockup-screen {
+        position: absolute;
+        top: 8px; left: 8px; right: 8px; bottom: 8px;
+        background: #050914;
+        border-radius: 48px;
+        overflow: hidden;
+        box-shadow: inset 0 0 16px rgba(0,0,0,1);
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .screen-glare {
+        position: absolute; inset: 0;
+        background: linear-gradient(110deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 45%);
+        pointer-events: none;
+        z-index: 40;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .dynamic-island {
+        position: absolute;
+        top: 12px; left: 50%; margin-left: -60px;
+        width: 120px; height: 32px;
+        background: #000;
+        border-radius: 100px;
+        z-index: 50;
+        display: flex; align-items: center; justify-content: flex-end;
+        padding-right: 14px;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .island-dot {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: #518C16;
+        box-shadow: 0 0 10px rgba(81,140,22,0.9);
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .app-content {
+        padding: 60px 24px 32px;
+        height: 100%;
+        position: relative;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .app-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 32px;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .app-eyebrow {
+        font-family: "Geist Mono", monospace;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        color: #71717A;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .app-title {
+        font-family: "Outfit", sans-serif;
+        font-weight: 700;
+        font-size: 24px;
+        color: #FFFFFF;
+        letter-spacing: -0.02em;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .app-avatar {
+        width: 40px; height: 40px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        display: flex; align-items: center; justify-content: center;
+        font-family: "Outfit";
+        font-weight: 700;
+        font-size: 14px;
+        color: #FFFFFF;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .ring-stage {
+        position: relative;
+        width: 200px; height: 200px;
+        margin: 0 auto 32px;
+        filter: drop-shadow(0 20px 30px rgba(0,0,0,0.8));
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .ring-bg {
+        fill: none;
+        stroke: rgba(255,255,255,0.04);
+        stroke-width: 14;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .ring-fg {
+        fill: none;
+        stroke: #518C16;
+        stroke-width: 14;
+        stroke-linecap: round;
+        stroke-dasharray: 502;
+        stroke-dashoffset: 502;
+        transform: rotate(-90deg);
+        transform-origin: center;
+        filter: drop-shadow(0 0 12px rgba(81,140,22,0.6));
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .ring-center {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .counter-val {
+        font-family: "Outfit", sans-serif;
+        font-weight: 800;
+        font-size: 48px;
+        letter-spacing: -0.04em;
+        color: #FFFFFF;
+        line-height: 1;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .counter-label {
+        font-family: "Geist Mono", monospace;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        color: rgba(220,255,210,0.5);
+        text-transform: uppercase;
+        margin-top: 4px;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .row-list { display: flex; flex-direction: column; gap: 12px; }
+
+      [data-composition-id="cinematic-hero-puvindren"] .row-card {
+        background: linear-gradient(180deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.01) 100%);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 20px;
+        padding: 14px;
+        display: flex; align-items: center; gap: 12px;
+        box-shadow:
+          0 10px 20px rgba(0,0,0,0.3),
+          inset 0 1px 1px rgba(255,255,255,0.05);
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .row-icon {
+        width: 40px; height: 40px;
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+      }
+      [data-composition-id="cinematic-hero-puvindren"] .row-icon.green {
+        background: linear-gradient(135deg, rgba(81,140,22,0.25), rgba(81,140,22,0.04));
+        border: 1px solid rgba(81,140,22,0.3);
+      }
+      [data-composition-id="cinematic-hero-puvindren"] .row-icon.silver {
+        background: linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.02));
+        border: 1px solid rgba(255,255,255,0.15);
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .row-bars { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+      [data-composition-id="cinematic-hero-puvindren"] .bar { height: 8px; border-radius: 4px; }
+      [data-composition-id="cinematic-hero-puvindren"] .bar-1 { width: 80px; background: rgba(255,255,255,0.2); }
+      [data-composition-id="cinematic-hero-puvindren"] .bar-2 { width: 50px; background: rgba(255,255,255,0.08); }
+
+      [data-composition-id="cinematic-hero-puvindren"] .home-indicator {
+        position: absolute;
+        bottom: 10px; left: 50%; margin-left: -55px;
+        width: 110px; height: 4px;
+        border-radius: 4px;
+        background: rgba(255,255,255,0.25);
+      }
+
+      /* ------ FLOATING BADGES ------ */
+      [data-composition-id="cinematic-hero-puvindren"] .badge {
+        position: absolute;
+        background: linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.02) 100%);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 16px;
+        padding: 14px 18px;
+        display: flex; align-items: center; gap: 14px;
+        box-shadow:
+          0 25px 60px -10px rgba(0,0,0,0.7),
+          inset 0 1px 1px rgba(255,255,255,0.18),
+          inset 0 -1px 1px rgba(0,0,0,0.5);
+        z-index: 30;
+      }
+      [data-composition-id="cinematic-hero-puvindren"] .badge-icon {
+        width: 40px; height: 40px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 20px;
+        background: linear-gradient(180deg, rgba(81,140,22,0.30), rgba(81,140,22,0.05));
+        border: 1px solid rgba(81,140,22,0.4);
+      }
+      [data-composition-id="cinematic-hero-puvindren"] .badge-text { display: flex; flex-direction: column; }
+      [data-composition-id="cinematic-hero-puvindren"] .badge-title {
+        font-family: "Outfit", sans-serif;
+        font-weight: 700;
+        font-size: 15px;
+        color: #FFFFFF;
+        letter-spacing: -0.01em;
+      }
+      [data-composition-id="cinematic-hero-puvindren"] .badge-sub {
+        font-family: "Geist", sans-serif;
+        font-size: 12px;
+        color: rgba(220,255,210,0.55);
+        margin-top: 2px;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .badge-1 { top: 60px; left: -30px; }
+      [data-composition-id="cinematic-hero-puvindren"] .badge-2 { bottom: 80px; right: -30px; }
+
+      /* ------ CARD RIGHT (BRAND NAME) ------ */
+      [data-composition-id="cinematic-hero-puvindren"] .brand-name {
+        font-family: "Outfit", sans-serif;
+        font-weight: 900;
+        font-size: 160px;
+        line-height: 0.85;
+        letter-spacing: -0.06em;
+        background: linear-gradient(180deg, #FFFFFF 0%, #71717A 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        filter: drop-shadow(0 16px 28px rgba(0,0,0,0.6));
+        text-align: right;
+        text-transform: uppercase;
+      }
+
+      /* ------ CTA (PHASE 5) ------ */
+      [data-composition-id="cinematic-hero-puvindren"] .cta-wrap {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 35;
+        text-align: center;
+        width: 100%;
+        padding: 0 80px;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .cta-heading {
+        font-family: "Outfit", sans-serif;
+        font-weight: 700;
+        font-size: 96px;
+        line-height: 1.0;
+        letter-spacing: -0.04em;
+        background: linear-gradient(180deg, #FFFFFF 0%, #71717A 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        filter: drop-shadow(0 12px 24px rgba(255,255,255,0.1));
+        margin-bottom: 24px;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .cta-desc {
+        font-family: "Geist", sans-serif;
+        font-weight: 300;
+        font-size: 24px;
+        line-height: 1.5;
+        color: rgba(255,255,255,0.65);
+        max-width: 700px;
+        margin: 0 auto 56px;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .btn-row {
+        display: flex; gap: 24px;
+        justify-content: center;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .btn {
+        padding: 22px 36px;
+        border-radius: 22px;
+        display: flex; align-items: center; gap: 14px;
+        font-family: "Outfit", sans-serif;
+        font-weight: 700;
+        font-size: 22px;
+        letter-spacing: -0.01em;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .btn-light {
+        background: linear-gradient(180deg, #FFFFFF 0%, #F1F5F9 100%);
+        color: #0F172A;
+        box-shadow:
+          0 0 0 1px rgba(0,0,0,0.05),
+          0 4px 8px rgba(0,0,0,0.1),
+          0 16px 32px -4px rgba(0,0,0,0.4),
+          inset 0 1px 1px #FFFFFF,
+          inset 0 -3px 6px rgba(0,0,0,0.06);
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .btn-dark {
+        background: linear-gradient(180deg, #1f3a17 0%, #0f1d0a 100%);
+        color: #FFFFFF;
+        box-shadow:
+          0 0 0 1px rgba(81,140,22,0.4),
+          0 4px 8px rgba(0,0,0,0.6),
+          0 16px 32px -4px rgba(0,0,0,0.9),
+          inset 0 1px 1px rgba(255,255,255,0.15),
+          inset 0 -3px 6px rgba(0,0,0,0.8);
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .btn-icon {
+        width: 32px; height: 32px;
+      }
+
+      [data-composition-id="cinematic-hero-puvindren"] .btn-stack {
+        display: flex; flex-direction: column; align-items: flex-start;
+        line-height: 1;
+      }
+      [data-composition-id="cinematic-hero-puvindren"] .btn-eyebrow {
+        font-family: "Geist Mono", monospace;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        opacity: 0.55;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+      }
+      [data-composition-id="cinematic-hero-puvindren"] .btn-main {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="cinematic-hero-puvindren"
+      data-width="1920"
+      data-height="1080"
+      data-start="0"
+      data-duration="10"
+    >
+      <div class="grid-bg" id="grid-bg"></div>
+
+      <!-- PHASE 1: Hero text -->
+      <div class="hero-text" id="hero-text">
+        <div class="hero-line-1" id="hero-line-1">Build the website,</div>
+        <div class="hero-line-2" id="hero-line-2">not just the brief.</div>
+      </div>
+
+      <!-- PHASE 5: CTA -->
+      <div class="cta-wrap" id="cta-wrap" style="opacity: 0;">
+        <div class="cta-heading" id="cta-heading">Let's work together.</div>
+        <div class="cta-desc" id="cta-desc">Conversion-focused websites in Shopify, WordPress, and Squarespace. Done in 5+ years across 15+ brands.</div>
+        <div class="btn-row" id="btn-row">
+          <div class="btn btn-light">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20 12.5a7 7 0 11-14 0 7 7 0 0114 0z M3 12c0-5 4-9 9-9s9 4 9 9-4 9-9 9-9-4-9-9z" stroke="currentColor" stroke-width="0" /><path d="M22 12c0-5.5-4.5-10-10-10S2 6.5 2 12s4.5 10 10 10 10-4.5 10-10zm-9.5 4.5l-3-3 1.5-1.5 1.5 1.5 4-4 1.5 1.5-5.5 5.5z" /></svg>
+            <div class="btn-stack">
+              <span class="btn-eyebrow">Let's talk</span>
+              <span class="btn-main">WhatsApp</span>
+            </div>
+          </div>
+          <div class="btn btn-dark">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zm0 7L2 14l10 5 10-5-10-5z"/></svg>
+            <div class="btn-stack">
+              <span class="btn-eyebrow">View work</span>
+              <span class="btn-main">puvindren.com</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PHASE 2-4: Main card -->
+      <div id="card" class="clip main-card" data-start="0" data-duration="10" data-track-index="1" style="opacity: 0;">
+        <div class="card-sheen"></div>
+        <div class="card-content">
+
+          <!-- LEFT: card text -->
+          <div class="card-left" id="card-left" style="opacity: 0;">
+            <div class="card-heading" id="card-heading">Conversion-focused websites.</div>
+            <div class="card-desc" id="card-desc">
+              <strong>Puvin</strong> partners with founders and brands to turn complex customer journeys into fast, intuitive sites that <strong>measurably grow revenue</strong> by 30-50%.
+            </div>
+          </div>
+
+          <!-- CENTER: phone mockup + floating badges -->
+          <div class="mockup-stage">
+            <div class="mockup" id="mockup" style="opacity: 0;">
+              <div class="mockup-screen">
+                <div class="screen-glare"></div>
+                <div class="dynamic-island"><div class="island-dot"></div></div>
+                <div class="app-content">
+                  <div class="app-header">
+                    <div>
+                      <div class="app-eyebrow">Today</div>
+                      <div class="app-title">Revenue lift</div>
+                    </div>
+                    <div class="app-avatar">PS</div>
+                  </div>
+
+                  <div class="ring-stage">
+                    <svg viewBox="0 0 200 200" style="width:100%; height:100%;">
+                      <circle class="ring-bg" cx="100" cy="100" r="80"/>
+                      <circle id="ring-fg" class="ring-fg" cx="100" cy="100" r="80"/>
+                    </svg>
+                    <div class="ring-center">
+                      <div class="counter-val" id="counter">0%</div>
+                      <div class="counter-label">Avg. Revenue Lift</div>
+                    </div>
+                  </div>
+
+                  <div class="row-list">
+                    <div class="row-card">
+                      <div class="row-icon green">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ee87a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                      </div>
+                      <div class="row-bars">
+                        <div class="bar bar-1"></div>
+                        <div class="bar bar-2"></div>
+                      </div>
+                    </div>
+                    <div class="row-card">
+                      <div class="row-icon silver">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+                      </div>
+                      <div class="row-bars">
+                        <div class="bar bar-1" style="width:60px"></div>
+                        <div class="bar bar-2" style="width:90px"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="home-indicator"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="badge badge-1" id="badge-1" style="opacity: 0;">
+              <div class="badge-icon">⚡</div>
+              <div class="badge-text">
+                <span class="badge-title">5s → &lt;2s</span>
+                <span class="badge-sub">Page load improvement</span>
+              </div>
+            </div>
+
+            <div class="badge badge-2" id="badge-2" style="opacity: 0;">
+              <div class="badge-icon">🚀</div>
+              <div class="badge-text">
+                <span class="badge-title">15+ shipped</span>
+                <span class="badge-sub">Across 5 years</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Brand name -->
+          <div class="brand-name" id="brand-name" style="opacity: 0;">PUVIN</div>
+
+        </div>
+      </div>
+
+      <div class="grain"></div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+
+      var gridBg = document.getElementById("grid-bg");
+      var heroText = document.getElementById("hero-text");
+      var heroLine1 = document.getElementById("hero-line-1");
+      var heroLine2 = document.getElementById("hero-line-2");
+      var card = document.getElementById("card");
+      var cardLeft = document.getElementById("card-left");
+      var brandName = document.getElementById("brand-name");
+      var mockup = document.getElementById("mockup");
+      var ringFg = document.getElementById("ring-fg");
+      var counter = document.getElementById("counter");
+      var badge1 = document.getElementById("badge-1");
+      var badge2 = document.getElementById("badge-2");
+      var ctaWrap = document.getElementById("cta-wrap");
+
+      // ============ PHASE 1: Hero text reveal (0-1.8s) ============
+
+      tl.fromTo(heroLine1,
+        { opacity: 0, y: 60, scale: 0.9, filter: "blur(20px)" },
+        { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", duration: 1.0, ease: "expo.out" },
+        0.2
+      );
+
+      tl.fromTo(heroLine2,
+        { opacity: 0, clipPath: "inset(0 100% 0 0)" },
+        { opacity: 1, clipPath: "inset(0 0% 0 0)", duration: 0.9, ease: "power4.inOut" },
+        0.7
+      );
+
+      // ============ PHASE 2: Card slides up + hero blurs back (1.5-3s) ============
+
+      tl.fromTo(card,
+        { opacity: 0, y: 1200 },
+        { opacity: 1, y: 0, duration: 1.5, ease: "power3.out" },
+        1.5
+      );
+
+      tl.to([heroText, gridBg], {
+        scale: 1.15,
+        filter: "blur(16px)",
+        opacity: 0.18,
+        duration: 1.3,
+        ease: "power2.inOut"
+      }, 1.5);
+
+      // ============ PHASE 3: Mockup + counter + ring (3.0-5.5s) ============
+
+      tl.fromTo(mockup,
+        { opacity: 0, y: 200, rotationX: 35, rotationY: -20, scale: 0.7 },
+        { opacity: 1, y: 0, rotationX: 0, rotationY: 0, scale: 1, duration: 1.6, ease: "expo.out" },
+        2.8
+      );
+
+      // Counter tick (0% -> 50%)
+      var counterObj = { v: 0 };
+      tl.to(counterObj, {
+        v: 50,
+        duration: 1.4,
+        ease: "expo.out",
+        onUpdate: function () { counter.textContent = Math.round(counterObj.v) + "%"; }
+      }, 3.4);
+
+      // Ring fills from 0 -> ~75%
+      tl.to(ringFg, {
+        strokeDashoffset: 125,
+        duration: 1.6,
+        ease: "power3.inOut"
+      }, 3.4);
+
+      // ============ PHASE 4: Side text + brand name + badges (4.5-6.5s) ============
+
+      tl.fromTo(cardLeft,
+        { opacity: 0, x: -50 },
+        { opacity: 1, x: 0, duration: 1.0, ease: "power4.out" },
+        4.6
+      );
+
+      tl.fromTo(brandName,
+        { opacity: 0, x: 50, scale: 0.85 },
+        { opacity: 1, x: 0, scale: 1, duration: 1.0, ease: "expo.out" },
+        4.6
+      );
+
+      tl.fromTo([badge1, badge2],
+        { opacity: 0, y: 80, scale: 0.7, rotationZ: -8 },
+        { opacity: 1, y: 0, scale: 1, rotationZ: 0, duration: 1.0, ease: "back.out(1.5)", stagger: 0.18 },
+        4.9
+      );
+
+      // ============ PHASE 4b: Hold + ambient (5.5-7s) ============
+
+      // Subtle mockup breathe
+      tl.to(mockup, {
+        y: -8,
+        duration: 0.9,
+        yoyo: true,
+        repeat: 1,
+        ease: "sine.inOut"
+      }, 5.5);
+
+      // Badge floats
+      tl.to(badge1, {
+        y: -6,
+        duration: 1.1,
+        yoyo: true,
+        repeat: 1,
+        ease: "sine.inOut"
+      }, 5.7);
+      tl.to(badge2, {
+        y: 6,
+        duration: 1.1,
+        yoyo: true,
+        repeat: 1,
+        ease: "sine.inOut"
+      }, 5.9);
+
+      // ============ PHASE 5: Card pulls back, CTA appears (7.0-8.5s) ============
+
+      // Hide card content (left + right + mockup + badges fade)
+      tl.to([cardLeft, brandName, mockup, badge1, badge2], {
+        opacity: 0,
+        scale: 0.92,
+        y: -30,
+        duration: 0.7,
+        ease: "power3.in",
+        stagger: 0.04
+      }, 7.0);
+
+      // Card itself shrinks back into a smaller frame
+      tl.to(card, {
+        width: 1280,
+        height: 720,
+        marginLeft: -640,
+        marginTop: -360,
+        borderRadius: 56,
+        duration: 1.2,
+        ease: "expo.inOut"
+      }, 7.4);
+
+      // CTA fades in
+      tl.fromTo(ctaWrap,
+        { opacity: 0, scale: 0.85, filter: "blur(20px)" },
+        { opacity: 1, scale: 1, filter: "blur(0px)", duration: 1.2, ease: "expo.out" },
+        7.7
+      );
+
+      // Subtle CTA breathe during hold
+      tl.to(ctaWrap, {
+        scale: 1.01,
+        duration: 1.0,
+        yoyo: true,
+        repeat: 1,
+        ease: "sine.inOut"
+      }, 8.7);
+
+      window.__timelines["cinematic-hero-puvindren"] = tl;
+    </script>
+  </body>
+</html>

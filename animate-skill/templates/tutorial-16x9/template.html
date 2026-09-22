@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tutorial 16:9 (Animate, What We Built style)</title>
+<!--
+  Ryan-styled 16:9 tutorial composition built from a Local Loom take package.
+  scripts/build-tutorial.mjs replaces __DATA__ / __DURATION__ / __VOICE__ and writes index.html. Edit scene-plan.json, not this file.
+  Everything on the timeline is a pure function of time: no timers, no randomness, no clock.
+-->
+<style>
+@font-face{font-family:Inter;src:url('assets/inter-800.woff2');font-weight:800}
+@font-face{font-family:Inter;src:url('assets/inter-500.woff2');font-weight:500}
+@font-face{font-family:Pixelify;src:url('assets/pixelify-700.woff2');font-weight:700}
+:root{--ink:#161819;--paper:#D9DCDF;--paper2:#EEF0F2;--accent:#E65D20;--grey:#6D747A;--grey2:#A7ADB2}
+*{box-sizing:border-box;margin:0}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--paper);font-family:Inter,sans-serif}
+#root{position:relative;width:100%;height:100%;overflow:hidden;background:var(--paper);color:var(--ink)}
+#grid{position:absolute;inset:0;background-image:linear-gradient(rgba(167,173,178,.28) 1px,transparent 1px),linear-gradient(90deg,rgba(167,173,178,.28) 1px,transparent 1px);background-size:12px 12px}
+.clip{position:absolute}
+#frame{position:absolute;overflow:hidden;background:#000;border:3px solid var(--ink);box-shadow:16px 16px 0 var(--ink)}
+#screenVid{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:0 0;object-fit:fill}
+#cam{position:absolute;overflow:hidden;background:#000;border:0 solid var(--ink);box-shadow:8px 8px 0 var(--accent)}
+#camVid{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover}
+#progt{position:absolute;left:0;top:0;width:1920px;height:10px;background:rgba(167,173,178,.5)}
+#prog{position:absolute;left:0;top:0;bottom:0;width:100%;background:var(--accent);transform-origin:0 50%}
+/*__PANEL_KIT_CSS__*/
+.chapter{position:absolute;left:48px;top:12px;height:58px;display:flex;align-items:center;gap:16px;padding:0 24px 0 0;background:var(--ink);color:var(--paper2);box-shadow:8px 8px 0 var(--accent)}
+.chapter .n{align-self:stretch;display:grid;place-items:center;padding:0 20px;background:var(--accent);color:var(--ink);font-family:Pixelify,sans-serif;font-size:32px}
+.chapter .t{font-size:30px;font-weight:800;letter-spacing:-1px}
+.chapter .cw{display:inline-block}
+.chapter .ci{align-self:center;width:44px;height:44px;display:grid;place-items:center;background:#fff;padding:7px;margin-left:-4px}
+.chapter .ci svg{width:100%;height:100%}
+.callout .ci{display:inline-block;vertical-align:middle;width:44px;height:44px;margin:-6px 12px -6px -8px;padding:6px;background:#fff;border:3px solid var(--ink)}
+.callout .ci svg{width:100%;height:100%;display:block}
+.logo{position:absolute;display:flex;flex-direction:column;align-items:center}
+.logo .tlab{background:var(--paper2);border:3px solid var(--ink);padding:6px 10px 7px;margin-top:20px;box-shadow:6px 6px 0 var(--ink)}
+.statp{position:absolute;padding:14px 30px 18px;background:var(--paper2);border:3px solid var(--ink);box-shadow:10px 10px 0 var(--accent);text-align:left}
+.statp .sv{font-size:96px;line-height:.95;font-weight:800;letter-spacing:-4px}
+.statp .sv i{font-style:normal;color:var(--accent)}
+.statp .sl{margin-top:8px;font-size:32px;font-weight:500;letter-spacing:-1px;color:var(--grey)}
+.callout{position:absolute;max-width:520px;padding:14px 24px;background:var(--paper2);border:3px solid var(--ink);box-shadow:8px 8px 0 var(--accent);font-size:36px;font-weight:800;letter-spacing:-1px;line-height:1.1}
+.ring{position:absolute;border:4px solid var(--accent);box-shadow:0 0 0 3px var(--ink)}
+#fx{position:absolute;inset:0;pointer-events:none}
+#caps{position:absolute;display:flex;align-items:flex-end;justify-content:center}
+.cap{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;opacity:0}
+.capbox{max-width:100%;padding:12px 26px 14px;font-size:44px;line-height:1.15;font-weight:800;letter-spacing:-1px;text-align:center;white-space:normal;color:var(--ink)}
+.plate .capbox{background:var(--paper2);border:3px solid var(--ink);box-shadow:8px 8px 0 var(--ink)}
+.noplate .capbox{color:var(--paper2);-webkit-text-stroke:9px var(--ink);paint-order:stroke fill}
+.w{color:var(--grey);display:inline-block;white-space:pre;transform-origin:50% 100%;opacity:0}
+.noplate .w{color:var(--paper2)}
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="__DURATION__" data-width="1920" data-height="1080">
+  <div id="grid"></div>
+  <div id="progt"><div id="prog"></div></div>
+  <div id="frame">
+    <video id="screenVid" class="clip" src="assets/screen.mp4" data-start="0" data-duration="__DURATION__" data-track-index="0" muted playsinline></video>
+  </div>
+  <svg id="fx" width="1920" height="1080" viewBox="0 0 1920 1080" shape-rendering="crispEdges"></svg>
+  <div id="cam">
+    <video id="camVid" class="clip" src="assets/camera.mp4" data-start="0" data-duration="__DURATION__" data-track-index="1" muted playsinline></video>
+  </div>
+  <div id="caps" class="plate"></div>
+  <audio id="voice" class="clip" src="__VOICE__" data-start="0" data-duration="__DURATION__" data-track-index="2"></audio>
+</div>
+<script src="assets/gsap.min.js"></script>
+<script>
+/*__DATA__*/
+(() => {
+/*__PANEL_KIT_JS__*/
+  const T = 0.4, EASE = 'expo.inOut';
+  const { layout: L, plan, captions, duration } = DATA;
+  const $ = (id) => document.getElementById(id);
+  const root = $('root'), frame = $('frame'), vid = $('screenVid'), cam = $('cam'), fx = $('fx'), caps = $('caps');
+  const F = L.frame; const B = L.bubble;
+  Object.assign(frame.style, { left: F.x + 'px', top: F.y + 'px', width: F.w + 'px', height: F.h + 'px' });
+  Object.assign(caps.style, { left: L.caps.x + 'px', top: L.caps.y + 'px', width: L.caps.w + 'px', height: L.caps.h + 'px' });
+  const tl = gsap.timeline({ paused: true });
+  // screen=0, camera=1, voice=2 (declared above) leave 3-6 free for the house sound effects.
+  const SFX_TRACKS = { title: 3, count: 4, lock: 5, cut: 6 };
+
+  // ---- camera states (one <video>, resized between states; never crossfaded) ----
+  const inner = { w: F.w - 6, h: F.h - 6 }; // frame content box (3px borders)
+  const camStates = {
+    bubble: { left: B.x, top: B.y, width: B.d, height: B.d, borderRadius: B.d / 2, borderWidth: 5, boxShadow: '8px 8px 0 #E65D20' },
+    full: { left: 0, top: 0, width: 1920, height: 1090, borderRadius: 0, borderWidth: 0, boxShadow: '0px 0px 0 #E65D20' }, // 10 px overscan: the plate floats a few pixels
+    plate: { left: 1032, top: 130, width: 800, height: 800, borderRadius: 8, borderWidth: 5, boxShadow: '16px 16px 0 #E65D20' },
+    off: { left: -400, top: B.y, width: B.d, height: B.d, borderRadius: B.d / 2, borderWidth: 5, boxShadow: '8px 8px 0 #E65D20' },
+  };
+  const stateFor = (scene) => scene.type === 'presenter' ? 'full' : scene.type === 'split' ? 'plate' : (plan.bubble === 'off' ? 'off' : 'bubble');
+  const scenes = plan.scenes.length ? plan.scenes : [{ type: 'screen', start: 0, end: duration }];
+  // one panel per split scene, built by the shared kit (kinetic title, points, stat, icons, image, keycap, timeline)
+  scenes.forEach((scene, i) => {
+    if (scene.type !== 'split') return;
+    buildPanel(scene, i, { root, before: fx, tl, T, EASE, DATA, rect: { x: 64, y: 130, w: 920, h: 800 }, innerW: 802, startX: i === 0 ? 0 : -1300, sfx: SFX_TRACKS });
+  });
+  gsap.set(cam, camStates[stateFor(scenes[0])]); // initial states via gsap.set: a tl.set at 0 does not render while the playhead sits exactly at 0
+  if (scenes[0].type === 'split') gsap.set(frame, { x: -(F.x + F.w + 80) });
+  const blur = (el, at) => { tl.fromTo(el, { filter: 'blur(0px)' }, { filter: 'blur(9px)', duration: T / 2, ease: 'sine.out' }, at).to(el, { filter: 'blur(0px)', duration: T / 2, ease: 'sine.in' }, at + T / 2); };
+
+  let capsClass = null;
+  scenes.forEach((scene, i) => {
+    const at = scene.start;
+    const state = stateFor(scene);
+    if (i > 0) {
+      tl.to(cam, { ...camStates[state], duration: T, ease: EASE }, at); blur(cam, at);
+      const prev = scenes[i - 1];
+      if (scene.type === 'split') {
+        if (prev.type !== 'split') tl.to(frame, { x: -(F.x + F.w + 80), duration: T, ease: EASE }, at);
+        else tl.to(prev.panel, { x: -1300, duration: T, ease: EASE }, at);
+        tl.to(scene.panel, { x: 0, duration: T, ease: EASE }, at); blur(scene.panel, at);
+      } else if (prev.type === 'split') {
+        tl.to(frame, { x: 0, duration: T, ease: EASE }, at);
+        tl.to(prev.panel, { x: -1300, duration: T, ease: EASE }, at);
+      }
+      playSfx(root, caps, 'cut', at, SFX_TRACKS.cut);
+    }
+    const cls = scene.type === 'presenter' ? 'noplate' : 'plate';
+    if (cls !== capsClass) { tl.set(caps, { className: cls, ...(cls === 'noplate' ? { left: 64, top: 880, width: 1792, height: 170 } : { left: L.caps.x, top: L.caps.y, width: L.caps.w, height: L.caps.h }) }, at); capsClass = cls; }
+  });
+
+  // ---- zoom (punch-in on a region of the clean screen) ----
+  const zooms = plan.overlays.filter((o) => o.type === 'zoom').map((o) => {
+    const [rx, ry, rw, rh] = o.region;
+    const s = Math.min(3, Math.max(1, Math.min(1 / rw, 1 / rh)));
+    let x = inner.w / 2 - (rx + rw / 2) * inner.w * s, y = inner.h / 2 - (ry + rh / 2) * inner.h * s;
+    x = Math.min(0, Math.max(inner.w - inner.w * s, x)); y = Math.min(0, Math.max(inner.h - inner.h * s, y));
+    return { at: o.at, end: o.at + o.duration, s, x, y };
+  });
+  zooms.forEach((z) => {
+    tl.to(vid, { scale: z.s, x: z.x, y: z.y, duration: 0.8, ease: EASE }, z.at);
+    tl.to(vid, { scale: 1, x: 0, y: 0, duration: 0.8, ease: EASE }, z.end - 0.8);
+  });
+  const toCanvas = (fx_, fy_, t) => {
+    const z = zooms.find((q) => t >= q.at && t < q.end);
+    const s = z ? z.s : 1, ox = z ? z.x : 0, oy = z ? z.y : 0;
+    return { x: F.x + 3 + fx_ * inner.w * s + ox, y: F.y + 3 + fy_ * inner.h * s + oy };
+  };
+
+  // ---- chapter plates, callouts, logos, stats: each lands on the word that explains it ----
+  const svgNS = 'http://www.w3.org/2000/svg';
+  plan.overlays.forEach((o, i) => {
+    const end = o.at + o.duration;
+    if (o.type === 'chapter') {
+      const el = document.createElement('div'); el.className = 'chapter'; el.id = 'chapter' + i;
+      const words = String(o.text).split(/\s+/).filter(Boolean);
+      el.innerHTML = (o.label ? '<span class="n" id="cn' + i + '">' + esc(o.label) + '</span>' : '') + (o.icon ? '<span class="ci">' + tileFace({ icon: o.icon }, o.tint) + '</span>' : '') + '<span class="t">' + words.map((w, k) => '<span class="cw" id="cw' + i + '_' + k + '">' + esc(w) + '</span>').join(' ') + '</span>';
+      root.insertBefore(el, caps);
+      tl.fromTo(el, { x: -900 }, { x: 0, duration: T, ease: EASE }, o.at).to(el, { x: -900, duration: T, ease: EASE }, end - T);
+      words.forEach((w, k) => { const cw = $('cw' + i + '_' + k); gsap.set(cw, { opacity: 0, y: 20, scale: 1.3 }); tl.to(cw, { opacity: 1, y: 0, scale: 1, duration: 0.28, ease: 'back.out(2)' }, o.at + T * 0.7 + k * 0.07); });
+      if (o.label) { const n = $('cn' + i); gsap.set(n, { scale: 0.4 }); tl.to(n, { scale: 1, duration: 0.35, ease: 'back.out(3)' }, o.at + T * 0.5); }
+    }
+    if (o.type === 'callout') {
+      const target = toCanvas(o.x, o.y, o.at + T);
+      const side = o.side || 'up-left';
+      const dx = side.includes('right') ? 170 : -170, dy = side.includes('down') ? 150 : -150;
+      const el = document.createElement('div'); el.className = 'callout'; el.id = 'callout' + i;
+      el.innerHTML = (o.icon ? '<span class="ci">' + tileFace({ icon: o.icon }, o.tint) + '</span>' : '') + esc(o.text);
+      root.insertBefore(el, caps);
+      const w = Math.min(560, 40 + o.text.length * 19 + (o.icon ? 56 : 0)), h = 68;
+      const lx = Math.max(24, Math.min(1920 - w - 24, target.x + dx - w / 2)), ly = Math.max(24, Math.min(1080 - h - 24, target.y + dy - h / 2));
+      Object.assign(el.style, { left: lx + 'px', top: ly + 'px', opacity: 0 });
+      const ring = document.createElement('div'); ring.className = 'ring'; ring.id = 'ring' + i; root.insertBefore(ring, caps);
+      // ring size is a fraction of the screen, so it grows with the zoom active when the callout appears
+      const zs = (zooms.find((q) => o.at + T >= q.at && o.at + T < q.end) || { s: 1 }).s;
+      const rw = (o.w || 0.06) * inner.w * zs, rh = (o.h || 0.09) * inner.h * zs;
+      Object.assign(ring.style, { left: target.x - rw / 2 + 'px', top: target.y - rh / 2 + 'px', width: rw + 'px', height: rh + 'px', opacity: 0 });
+      // elbow arrow from the label to the ring (horizontal first, then vertical), drawn on in pixel steps
+      const ax = lx + w / 2, ay = dy < 0 ? ly + h : ly, bx = target.x, by = dy < 0 ? target.y - rh / 2 : target.y + rh / 2;
+      const path = document.createElementNS(svgNS, 'path');
+      path.setAttribute('d', `M${ax} ${ay} V${(ay + by) / 2} H${bx} V${by}`); path.setAttribute('fill', 'none'); path.setAttribute('stroke', '#161819'); path.setAttribute('stroke-width', '6'); path.setAttribute('stroke-linecap', 'square'); path.setAttribute('stroke-linejoin', 'miter');
+      const len = Math.abs(by - ay) + Math.abs(bx - ax); path.setAttribute('stroke-dasharray', len); path.setAttribute('stroke-dashoffset', len); path.setAttribute('opacity', '0'); path.id = 'arrow' + i;
+      fx.appendChild(path);
+      tl.fromTo(ring, { opacity: 0, scale: 1.4 }, { opacity: 1, scale: 1, duration: T, ease: 'back.out(2)' }, o.at)
+        .fromTo(el, { opacity: 0, scale: 0.6, y: 14 }, { opacity: 1, scale: 1, y: 0, duration: 0.45, ease: 'back.out(2.2)' }, o.at + 0.1)
+        .set(path, { opacity: 1 }, o.at + 0.1).to(path, { strokeDashoffset: 0, duration: T, ease: 'steps(8)' }, o.at + 0.1)
+        .to([ring, el, path], { opacity: 0, duration: 0.25, ease: 'power1.in' }, end - 0.25);
+      // the ring pulses while the callout is up (an odd repeat count ends back at rest)
+      const pulses = Math.floor((o.duration - 1.0) / 0.5);
+      if (pulses >= 1) tl.to(ring, { scale: 1.07, duration: 0.25, yoyo: true, repeat: pulses * 2 - 1, ease: 'sine.inOut' }, o.at + T + 0.2);
+    }
+    if (o.type === 'logo') {
+      // a real brand mark (or glyph) tile that pops in on the word, bobs, and leaves. x,y are fractions of the whole frame.
+      const size = o.size || 190, cx = (o.x ?? 0.9) * 1920, cy = (o.y ?? 0.2) * 1080;
+      const el = document.createElement('div'); el.className = 'logo'; el.id = 'logo' + i;
+      el.innerHTML = '<div class="tile" style="width:' + size + 'px;height:' + size + 'px">' + tileFace({ icon: o.icon }, o.tint) + '</div>' + (o.label ? '<div class="tlab" style="width:' + (size + 60) + 'px">' + esc(o.label.toUpperCase()) + '</div>' : '');
+      root.insertBefore(el, caps);
+      Object.assign(el.style, { left: cx - (size + 60) / 2 + 'px', top: cy - size / 2 + 'px', width: size + 60 + 'px' });
+      gsap.set(el, { scale: 0, rotation: -14, opacity: 0 });
+      tl.to(el, { scale: 1, rotation: 0, opacity: 1, duration: 0.5, ease: 'back.out(2.2)' }, o.at).to(el, { scale: 0, rotation: 10, opacity: 0, duration: 0.3, ease: 'power2.in' }, end - 0.3);
+      let r = Math.floor((o.duration - 1.2) / 0.45) - 1; if (r % 2 === 0) r -= 1;
+      if (r >= 1) tl.to(el, { y: -12, duration: 0.45, yoyo: true, repeat: r, ease: 'sine.inOut' }, o.at + 0.6);
+    }
+    if (o.type === 'stat') {
+      const cx = (o.x ?? 0.88) * 1920, cy = (o.y ?? 0.22) * 1080;
+      const el = document.createElement('div'); el.className = 'statp'; el.id = 'statp' + i;
+      el.innerHTML = '<div class="sv"><span id="sn' + i + '">' + esc(o.value) + '</span><i>.</i></div>' + (o.label ? '<div class="sl">' + esc(o.label) + '</div>' : '');
+      root.insertBefore(el, caps);
+      Object.assign(el.style, { left: cx + 'px', top: cy + 'px', transform: 'translate(-100%,0)' });
+      gsap.set(el, { xPercent: 0, opacity: 0, scale: 0.7, transformOrigin: '100% 0' });
+      tl.to(el, { opacity: 1, scale: 1, duration: 0.45, ease: 'back.out(2)' }, o.at).to(el, { opacity: 0, scale: 0.8, duration: 0.25, ease: 'power1.in' }, end - 0.25);
+      if (o.count && /^\d+$/.test(String(o.value))) { const c = $('sn' + i), obj = { v: 0 }; c.textContent = '0'; tl.to(obj, { v: Number(o.value), duration: 0.9, ease: 'power2.out', onUpdate: () => { c.textContent = String(Math.round(obj.v)); } }, o.at + 0.1); playSfx(root, caps, 'count', o.at + 1, SFX_TRACKS.count); }
+    }
+  });
+
+  // ---- always-moving layer: progress bar, drifting pixel grid, floating camera ----
+  gsap.set($('prog'), { scaleX: 0 }); tl.to($('prog'), { scaleX: 1, duration, ease: 'none' }, 0);
+  { const d = Math.round(duration * 10 / 12) * 12; tl.fromTo($('grid'), { backgroundPosition: '0px 0px' }, { backgroundPosition: '-' + d + 'px -' + d + 'px', duration, ease: 'none' }, 0); }
+  { const hops = Math.max(2, Math.floor(duration / 1.7)); tl.to(cam, { y: -6, duration: 1.7, yoyo: true, repeat: hops % 2 ? hops : hops + 1, ease: 'sine.inOut' }, 0); }
+
+  // ---- captions from take-package words (word highlight is a timeline colour set, never a timer) ----
+  if (plan.captions && plan.captions.enabled !== false) {
+    captions.forEach((group, g) => {
+      const el = document.createElement('div'); el.className = 'cap'; el.id = 'cap' + g;
+      const box = document.createElement('div'); box.className = 'capbox';
+      const spans = group.words.map((w) => { const s = document.createElement('span'); s.className = 'w'; s.textContent = w.text + ' '; box.appendChild(s); return s; });
+      el.appendChild(box); caps.appendChild(el);
+      tl.set(el, { opacity: 1 }, group.start).set(el, { opacity: 0 }, group.end);
+      // Spoken words settle to ink on a plate but to paper on the ink-stroked full-screen captions (ink-on-ink would vanish),
+      // and a group can straddle a scene change, so words already done are re-coloured at each boundary.
+      const doneAt = (t) => { const sc = scenes.find((q) => t >= q.start && t < q.end) || scenes[scenes.length - 1]; return sc.type === 'presenter' ? '#EEF0F2' : '#161819'; };
+      group.words.forEach((w, k) => {
+        // Words must not be legible before they're spoken (no reading ahead of the voice): fade/pop each one in at its own start, not just recolour it.
+        tl.fromTo(spans[k], { opacity: 0, y: 6 }, { opacity: 1, y: -4, duration: 0.12, ease: 'back.out(2)' }, w.start).set(spans[k], { color: '#E65D20' }, w.start).set(spans[k], { color: doneAt(w.end - 0.001), y: 0 }, w.end);
+        scenes.forEach((sc) => { if (sc.start > w.end && sc.start < group.end) tl.set(spans[k], { color: doneAt(sc.start) }, sc.start); });
+      });
+    });
+  }
+
+  window.__timelines = window.__timelines || {};
+  window.__timelines['main'] = tl;
+})();
+</script>
+</body>
+</html>

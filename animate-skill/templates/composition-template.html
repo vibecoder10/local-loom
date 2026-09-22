@@ -1,0 +1,333 @@
+<!doctype html>
+<!--
+  Hyperframes composition starter  -  RoboLabs / slides design system
+
+  HOW TO USE:
+  1. Run `npx hyperframes@latest init [project-name]` to scaffold the project files
+  2. Replace the generated index.html with this template
+  3. Update meta.json with your project's id + name
+  4. Customize the SCENE blocks (search for "// CUSTOMIZE")
+  5. Run `npx hyperframes@latest lint` (must be 0 errors)
+  6. Run `npx hyperframes@latest preview` and open the URL printed
+  7. When happy, render: `npx hyperframes@latest render -o output.mp4 --fps 30`
+
+  RULES (MUST FOLLOW  -  see animate SKILL.md for full list):
+  - Every timed element needs class="clip" + data-start + data-duration + data-track-index
+  - GSAP must NOT animate the .clip element directly  -  only its inner content
+  - Each visually-overlapping element gets its own data-track-index
+  - Clips on the same track CANNOT overlap (even by 0.001s  -  watch float precision)
+  - Timeline must be paused + registered as window.__timelines["composition-id"]
+  - Deterministic only  -  no Math.random, Date.now, fetch, requestAnimationFrame
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* =====================================================
+         RoboLabs design tokens (LOCKED  -  from DESIGN.md)
+         ===================================================== */
+      :root {
+        --bg: #000;
+        --surface: #0a0a0a;
+        --card: #14161f;
+        --border: #1f2230;
+        --border-2: #2e3244;
+        --text: #e0e0e0;
+        --text-paper: #f1ece0;
+        --text-dim: #888;
+        --muted: #9aa0b0;
+        --accent: #ff6b1a;   /* primary RoboLabs orange */
+        --teal: #50e3c2;
+        --amber: #f5a623;
+        --violet: #8b5cf6;
+        --cyan: #22d3ee;
+        --pink: #f472b6;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 1920px; height: 1080px; overflow: hidden;
+        background: var(--bg); color: var(--text);
+        font-family: 'Outfit', sans-serif;
+      }
+      #root { position: relative; width: 1920px; height: 1080px; }
+
+      /* =====================================================
+         Persistent layers (always-on chrome)
+         ===================================================== */
+      #hexBg { position: absolute; inset: 0; pointer-events: none; }
+
+      .vignette {
+        position: absolute; inset: 0; pointer-events: none;
+        background:
+          radial-gradient(800px at 14% 8%, rgba(255, 107, 26, 0.04), transparent 60%),
+          radial-gradient(700px at 88% 92%, rgba(139, 92, 246, 0.05), transparent 60%);
+      }
+
+      .watermark {
+        position: absolute; left: 36px; bottom: 36px;
+        display: flex; align-items: center; gap: 12px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 16px; font-weight: 700; letter-spacing: 0.18em;
+        color: var(--text-dim); text-transform: uppercase;
+        padding: 12px 18px; background: rgba(0, 0, 0, 0.45);
+        border: 1px solid var(--border); border-radius: 100px;
+      }
+      .watermark .hex { width: 22px; height: 22px; }
+      .watermark .ROBO { color: var(--text); font-weight: 800; }
+      .watermark .LABS { color: var(--text-dim); font-weight: 300; }
+
+      /* =====================================================
+         Scene base (full-screen scenes)
+         ===================================================== */
+      .scene {
+        position: absolute; inset: 0;
+        display: flex; align-items: center; justify-content: center;
+        flex-direction: column;
+      }
+
+      /* =====================================================
+         Title scene (example  -  customize copy)
+         ===================================================== */
+      .scene-title { gap: 32px; padding: 0 80px; }
+      .scene-title .kicker {
+        display: inline-flex; align-items: center; gap: 14px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 22px; font-weight: 700; letter-spacing: 0.22em;
+        color: var(--accent); text-transform: uppercase;
+      }
+      .scene-title .kicker svg { width: 26px; height: 26px; flex-shrink: 0; }
+      .scene-title h1 {
+        font-family: 'Instrument Serif', serif;
+        font-weight: 400; font-size: 152px;
+        line-height: 0.95; letter-spacing: -0.02em;
+        color: var(--text-paper); text-align: center;
+      }
+      .scene-title h1 em { font-style: italic; color: var(--accent); }
+      .scene-title .subtitle {
+        font-size: 30px; color: var(--text-dim);
+        max-width: 1100px; line-height: 1.5; text-align: center;
+        font-weight: 300;
+      }
+
+      /* =====================================================
+         Outro scene
+         ===================================================== */
+      .scene-outro { padding: 0 80px; gap: 32px; }
+      .outro-frame {
+        max-width: 1500px;
+        padding: 80px;
+        border: 1px solid rgba(255, 107, 26, 0.28); border-radius: 32px;
+        background: linear-gradient(135deg, rgba(255, 107, 26, 0.08), rgba(139, 92, 246, 0.05));
+        text-align: center;
+      }
+      .outro-quote {
+        font-family: 'Instrument Serif', serif;
+        font-style: italic; font-size: 76px;
+        color: var(--text-paper); line-height: 1.22;
+        margin-bottom: 30px;
+      }
+      .outro-quote .hl { color: var(--accent); }
+      .outro-attr {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 22px; letter-spacing: 0.22em;
+        color: var(--text-dim); text-transform: uppercase;
+      }
+    </style>
+  </head>
+  <body>
+    <!--
+      Composition root  -  id "main" is the timeline key. Update data-duration to match total seconds.
+      data-width/height locked at 1920×1080  -  Hyperframes' default canvas.
+    -->
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="10"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- Track 0: hex mesh (always on) -->
+      <canvas
+        id="hexBg"
+        class="clip"
+        data-start="0"
+        data-duration="10"
+        data-track-index="0"
+        width="1920"
+        height="1080"
+      ></canvas>
+
+      <!-- Track 1: vignette overlay (always on) -->
+      <div
+        id="vignette"
+        class="vignette clip"
+        data-start="0"
+        data-duration="10"
+        data-track-index="1"
+      ></div>
+
+      <!--
+        Track 2: title scene (0-4s)
+        CUSTOMIZE: copy this pattern for each scene. The OUTER div is the .clip shell
+        (framework manages visibility). The INNER #scene-X div is what GSAP animates.
+      -->
+      <div
+        id="clip-title"
+        class="clip"
+        data-start="0"
+        data-duration="4"
+        data-track-index="2"
+      >
+        <div id="scene-title" class="scene scene-title">
+          <div class="kicker">
+            <svg viewBox="0 0 100 100">
+              <polygon points="50,5 93,28 93,72 50,95 7,72 7,28" fill="#ff6b1a" />
+            </svg>
+            CUSTOMIZE · Project Tag
+          </div>
+          <h1>Your <em>Title</em> Here</h1>
+          <p class="subtitle">A short subtitle that explains what this is in one breath.</p>
+        </div>
+      </div>
+
+      <!-- Track 2: outro scene (7-10s, same track since it's after title) -->
+      <div
+        id="clip-outro"
+        class="clip"
+        data-start="7"
+        data-duration="3"
+        data-track-index="2"
+      >
+        <div id="scene-outro" class="scene scene-outro">
+          <div class="outro-frame">
+            <p class="outro-quote">
+              "A closing line with a <span class="hl">key word</span> emphasized."
+            </p>
+            <p class="outro-attr">RoboLabs · Project Tag</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Track 9: watermark (always on, every video) -->
+      <div
+        id="watermark"
+        class="watermark clip"
+        data-start="0"
+        data-duration="10"
+        data-track-index="9"
+      >
+        <svg class="hex" viewBox="0 0 100 100">
+          <polygon points="50,5 93,28 93,72 50,95 7,72 7,28" fill="#ff6b1a" />
+        </svg>
+        <span><span class="ROBO">ROBO</span><span class="LABS">LABS</span></span>
+      </div>
+    </div>
+
+    <script>
+      /* =====================================================
+         Pixel-art Robo agent (canonical from dashboard SIDEBAR_ICON_DATA)
+         Drop on any element with data-agent="robo" to render.
+         ===================================================== */
+      const SIDEBAR_ICON_DATA = {
+        robo: { color: '#ffffff', pixels: [[0,0,1,0],[1,1,1,1],[1,1,1,1],[1,0,1,1],[1,1,1,1],[1,1,1,1],[1,0,0,1],[0,0,0,0]] },
+        // Add more pixel icons as 4-column bitmaps; the renderer mirrors them to 8 columns
+      };
+      function pixelAgentSvg(agentId) {
+        const d = SIDEBAR_ICON_DATA[agentId];
+        if (!d) return '';
+        const cols = 8, pixels = d.pixels, lastRow = pixels.length - 1;
+        let bodyRects = '', legRects = '';
+        for (let y = 0; y < pixels.length; y++) {
+          for (let x = 0; x < pixels[y].length; x++) {
+            if (pixels[y][x]) {
+              const r1 = `<rect x="${x}" y="${y}" width="1" height="1"/>`;
+              const r2 = `<rect x="${cols - 1 - x}" y="${y}" width="1" height="1"/>`;
+              if (y >= lastRow) legRects += r1 + r2;
+              else bodyRects += r1 + r2;
+            }
+          }
+        }
+        return `<svg viewBox="0 0 8 9" fill="currentColor" style="image-rendering:pixelated;">
+          <g>${bodyRects}</g><g>${legRects}</g>
+        </svg>`;
+      }
+      document.querySelectorAll('[data-agent]').forEach((el) => {
+        el.innerHTML = pixelAgentSvg(el.dataset.agent);
+      });
+
+      /* =====================================================
+         Hex mesh canvas  -  deterministic, driven by timeline time
+         (NOT requestAnimationFrame  -  that breaks frame seek)
+         ===================================================== */
+      const canvas = document.getElementById('hexBg');
+      const ctx = canvas.getContext('2d');
+      const W = 1920, H = 1080;
+      function drawHex(time) {
+        ctx.clearRect(0, 0, W, H);
+        const cell = 28;
+        const hexW = cell * Math.sqrt(3);
+        const hexH = cell * 1.5;
+        ctx.save();
+        ctx.translate(W / 2, H / 2);
+        ctx.rotate(time * 0.012);
+        ctx.translate(-W / 2, -H / 2);
+        for (let y = -hexH; y < H + hexH; y += hexH) {
+          for (let x = -hexW; x < W + hexW; x += hexW) {
+            const off = (Math.round(y / hexH) % 2) * (hexW / 2);
+            const cx = x + off, cy = y;
+            const dx = (cx - W / 2) / W, dy = (cy - H / 2) / H;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            const fade = Math.max(0, 1 - Math.pow(d * 1.5, 2));
+            ctx.strokeStyle = `rgba(255,255,255,${0.085 * fade})`;
+            ctx.lineWidth = 0.8;
+            ctx.beginPath();
+            for (let i = 0; i < 6; i++) {
+              const ang = (Math.PI / 3) * i + Math.PI / 6;
+              const px = cx + cell * Math.cos(ang);
+              const py = cy + cell * Math.sin(ang);
+              if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+            }
+            ctx.closePath(); ctx.stroke();
+          }
+        }
+        ctx.restore();
+      }
+      drawHex(0);
+
+      /* =====================================================
+         GSAP timeline  -  paused, registered, deterministic.
+         CUSTOMIZE: add tweens per scene below.
+         ===================================================== */
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // Re-paint the hex background on every timeline tick.
+      tl.eventCallback('onUpdate', () => drawHex(tl.time()));
+
+      /* --- Title scene (0-4s) --- */
+      // Slide-up-fade pattern for stacked text
+      tl.from('#scene-title .kicker',   { opacity: 0, y: -20, duration: 0.55, ease: 'power2.out' }, 0.1);
+      tl.from('#scene-title h1',        { opacity: 0, y: 30,  duration: 0.75, ease: 'power3.out' }, 0.4);
+      tl.from('#scene-title .subtitle', { opacity: 0, y: 18,  duration: 0.55, ease: 'power2.out' }, 0.9);
+
+      /* --- Watermark entry --- */
+      tl.from('#watermark', { opacity: 0, x: -30, duration: 0.6, ease: 'power2.out' }, 0.2);
+
+      /* --- Outro (7-10s) --- */
+      tl.from('#scene-outro .outro-frame', { opacity: 0, scale: 0.92, duration: 0.7, ease: 'power3.out' }, 7.1);
+      tl.from('#scene-outro .outro-quote', { opacity: 0, y: 20, duration: 0.55, ease: 'power2.out' }, 7.4);
+      tl.from('#scene-outro .outro-attr',  { opacity: 0, y: 10, duration: 0.45, ease: 'power2.out' }, 8.0);
+
+      window.__timelines['main'] = tl;
+    </script>
+  </body>
+</html>

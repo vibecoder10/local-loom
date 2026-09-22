@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { background: #000; overflow: hidden; }
+      body { width: 1920px; height: 1080px; }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="root"
+      data-width="1920"
+      data-height="1080"
+      data-start="0"
+      data-duration="164"
+    >
+      <!-- Audio track -->
+      <audio id="bg-audio" data-start="0" data-duration="164" data-track-index="9" data-volume="1" src="assets/audio.mp3"></audio>
+
+      <!-- Beat 1+2: Intro (shader 0-5.5s + globe 4-15s) -->
+      <div
+        class="clip"
+        data-composition-id="intro"
+        data-composition-src="compositions/intro.html"
+        data-start="0"
+        data-duration="15"
+        data-track-index="0"
+        data-width="1920"
+        data-height="1080"
+      ></div>
+
+      <!-- Beat 3: Title slide (15-22s) -->
+      <div
+        class="clip"
+        data-composition-id="title"
+        data-composition-src="compositions/title.html"
+        data-start="15"
+        data-duration="7"
+        data-track-index="0"
+        data-width="1920"
+        data-height="1080"
+      ></div>
+
+      <!-- Beat 4: M1 Anatomy (22-45s) -->
+      <div
+        class="clip"
+        data-composition-id="m1"
+        data-composition-src="compositions/m1.html"
+        data-start="22"
+        data-duration="23"
+        data-track-index="0"
+        data-width="1920"
+        data-height="1080"
+      ></div>
+
+      <!-- Beat 5: M2 Deep Dive (45-68s) -->
+      <div
+        class="clip"
+        data-composition-id="m2"
+        data-composition-src="compositions/m2.html"
+        data-start="45"
+        data-duration="23"
+        data-track-index="0"
+        data-width="1920"
+        data-height="1080"
+      ></div>
+
+      <!-- Beat 6: M3 Language (68-91s) -->
+      <div
+        class="clip"
+        data-composition-id="m3"
+        data-composition-src="compositions/m3.html"
+        data-start="68"
+        data-duration="23"
+        data-track-index="0"
+        data-width="1920"
+        data-height="1080"
+      ></div>
+
+      <!-- Beat 7: M4 Techniques (91-114s) -->
+      <div
+        class="clip"
+        data-composition-id="m4"
+        data-composition-src="compositions/m4.html"
+        data-start="91"
+        data-duration="23"
+        data-track-index="0"
+        data-width="1920"
+        data-height="1080"
+      ></div>
+
+      <!-- Beat 8: M5 Orchestration (114-137s) -->
+      <div
+        class="clip"
+        data-composition-id="m5"
+        data-composition-src="compositions/m5.html"
+        data-start="114"
+        data-duration="23"
+        data-track-index="0"
+        data-width="1920"
+        data-height="1080"
+      ></div>
+
+      <!-- Beat 9: M6 Command Centre (137-160s) -->
+      <div
+        class="clip"
+        data-composition-id="m6"
+        data-composition-src="compositions/m6.html"
+        data-start="137"
+        data-duration="23"
+        data-track-index="0"
+        data-width="1920"
+        data-height="1080"
+      ></div>
+
+      <!-- Beat 10: Closing (160-164s) -->
+      <div
+        class="clip"
+        data-composition-id="closing"
+        data-composition-src="compositions/closing.html"
+        data-start="160"
+        data-duration="4"
+        data-track-index="0"
+        data-width="1920"
+        data-height="1080"
+      ></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script>
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      window.__timelines["root"] = tl;
+    </script>
+  </body>
+</html>

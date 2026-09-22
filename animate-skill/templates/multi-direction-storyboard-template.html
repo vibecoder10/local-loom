@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{Project}}  -  Multi-Direction Storyboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<!--
+  MULTI-DIRECTION STORYBOARD TEMPLATE
+  ====================================
+  Use this template when exploring MULTIPLE VISUAL DIRECTIONS for the same content
+  before committing to a build. Different from the per-scene `storyboard-template.html`:
+  this one shows N (typically 3) parallel concept directions side-by-side, each as a
+  4-keyframe row, with the animation prompt that drives that direction.
+
+  Workflow:
+    1. Copy this file to {project-folder}/storyboard-multi.html
+    2. Customize: brand colors at :root, header content, 3 .direction blocks
+    3. For each direction: 4 keyframes (0s/3s/6s/10s) using inline SVG mockups
+    4. Open in browser, send to the stakeholder for picking
+    5. Once picked, port to Hyperframes as a single composition (or use the
+       multi-scene reel pattern in SKILL.md `Mounting scenes in a host reel`)
+
+  Replace these placeholder tokens before shipping:
+    {{Project}}            - e.g. "Wise" / "AcmeCo"
+    {{ProjectURL}}         - source URL/site if applicable
+    {{Format}}             - "1920×1080, 10s, image-to-video"
+    {{Stack}}              - the model/tech stack you'd build with
+    {{Direction A label}}  - short title for direction A (e.g. "Orbiting Currencies")
+    {{Vibe A}}             - one-line mood description
+    {{Animation prompt A}} - full prompt that drives this direction
+    {{Cost note}}          - per-direction cost if applicable
+-->
+<style>
+  :root {
+    /* SWAP these for the project's brand palette */
+    --bg:           #163300;
+    --bg-deep:      #0A1F00;
+    --surface:      #1F4400;
+    --accent:       #9FE870;
+    --accent-bright:#BFFF8A;
+    --text:         #F2F7EA;
+    --muted:        #8FA88A;
+    --line:         rgba(159, 232, 112, 0.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 60px 40px;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1320px; margin: 0 auto; }
+
+  /* HEADER */
+  header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-bottom: 60px; padding-bottom: 30px;
+    border-bottom: 1px solid var(--line);
+  }
+  .brand {
+    font-size: 14px; color: var(--muted);
+    letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px;
+  }
+  h1 {
+    font-size: 48px; font-weight: 800;
+    letter-spacing: -0.02em; color: var(--text);
+  }
+  h1 span { color: var(--accent); }
+  .meta {
+    text-align: right; color: var(--muted); font-size: 13px; line-height: 1.7;
+  }
+  .meta strong { color: var(--text); font-weight: 500; }
+
+  /* DIRECTION CARD */
+  .direction {
+    margin-bottom: 70px; padding: 32px;
+    background: var(--bg-deep);
+    border-radius: 16px; border: 1px solid var(--line);
+  }
+  .direction-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 28px; flex-wrap: wrap; gap: 16px;
+  }
+  .label { display: inline-flex; align-items: center; gap: 14px; }
+  .pill {
+    display: inline-block; width: 36px; height: 36px; line-height: 36px;
+    text-align: center; background: var(--accent); color: var(--bg);
+    border-radius: 50%; font-weight: 800; font-size: 16px;
+  }
+  .title { font-size: 22px; font-weight: 700; color: var(--text); }
+  .vibe {
+    font-size: 13px; color: var(--muted); font-style: italic;
+    max-width: 50%; text-align: right;
+  }
+
+  /* KEYFRAMES ROW */
+  .frames {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 16px; margin-bottom: 24px;
+  }
+  .frame {
+    background: var(--bg); border-radius: 10px; overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .frame-canvas {
+    aspect-ratio: 16/9;
+    background: linear-gradient(135deg, var(--bg-deep) 0%, var(--bg) 100%);
+    position: relative; overflow: hidden;
+  }
+  .frame-canvas svg { width: 100%; height: 100%; display: block; }
+  .frame-meta {
+    padding: 10px 14px; display: flex;
+    justify-content: space-between; align-items: center; font-size: 11px;
+  }
+  .frame-time {
+    color: var(--accent); font-weight: 600; letter-spacing: 0.08em;
+  }
+  .frame-label { color: var(--muted); }
+  .beat {
+    padding: 10px 14px 14px;
+    font-size: 12.5px; color: var(--text); line-height: 1.5;
+    border-top: 1px solid var(--line);
+  }
+
+  /* PROMPT BLOCK */
+  .prompt-box {
+    margin-top: 16px; padding: 18px 22px;
+    background: rgba(159, 232, 112, 0.06);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    font-size: 13px; line-height: 1.7; color: var(--text);
+  }
+  .prompt-box strong {
+    color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    font-size: 11px; display: block; margin-bottom: 6px;
+  }
+
+  /* FOOTER */
+  footer {
+    margin-top: 50px; padding-top: 30px;
+    border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 20px;
+  }
+  .cost { font-size: 14px; color: var(--muted); }
+  .cost strong { color: var(--accent); font-size: 18px; font-weight: 700; }
+  .cta { font-size: 13px; color: var(--muted); }
+  .cta strong { color: var(--text); }
+
+  @media (max-width: 900px) {
+    body { padding: 40px 20px; }
+    .frames { grid-template-columns: repeat(2, 1fr); }
+    h1 { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="brand">Storyboard · Multi-Direction Explore</div>
+      <h1>{{Project}} <span>{{Duration e.g. 10s}}</span></h1>
+    </div>
+    <div class="meta">
+      <strong>Source:</strong> {{ProjectURL or N/A}}<br>
+      <strong>Format:</strong> {{Format}}<br>
+      <strong>Stack:</strong> {{Stack}}
+    </div>
+  </header>
+
+  <!-- ============== DIRECTION A ============== -->
+  <div class="direction">
+    <div class="direction-head">
+      <div class="label">
+        <span class="pill">A</span>
+        <span class="title">{{Direction A title}}</span>
+      </div>
+      <div class="vibe">{{One-line mood for direction A}}</div>
+    </div>
+
+    <div class="frames">
+      <!-- Frame 1: Open (0s) -->
+      <div class="frame">
+        <div class="frame-canvas">
+          <!-- Replace with inline SVG mockup of the opening frame -->
+          <svg viewBox="0 0 320 180">
+            <text x="160" y="100" text-anchor="middle" fill="var(--muted)" font-size="10">{{frame 1 mock}}</text>
+          </svg>
+        </div>
+        <div class="frame-meta"><span class="frame-time">00:00</span><span class="frame-label">Open</span></div>
+        <div class="beat">{{Beat 1: what's on screen at the start}}</div>
+      </div>
+
+      <!-- Frame 2: Build (3s) -->
+      <div class="frame">
+        <div class="frame-canvas">
+          <svg viewBox="0 0 320 180">
+            <text x="160" y="100" text-anchor="middle" fill="var(--muted)" font-size="10">{{frame 2 mock}}</text>
+          </svg>
+        </div>
+        <div class="frame-meta"><span class="frame-time">00:03</span><span class="frame-label">Build</span></div>
+        <div class="beat">{{Beat 2: the action begins}}</div>
+      </div>
+
+      <!-- Frame 3: Develop (6s) -->
+      <div class="frame">
+        <div class="frame-canvas">
+          <svg viewBox="0 0 320 180">
+            <text x="160" y="100" text-anchor="middle" fill="var(--muted)" font-size="10">{{frame 3 mock}}</text>
+          </svg>
+        </div>
+        <div class="frame-meta"><span class="frame-time">00:06</span><span class="frame-label">Develop</span></div>
+        <div class="beat">{{Beat 3: peak development}}</div>
+      </div>
+
+      <!-- Frame 4: Hero (final) -->
+      <div class="frame">
+        <div class="frame-canvas">
+          <svg viewBox="0 0 320 180">
+            <text x="160" y="100" text-anchor="middle" fill="var(--muted)" font-size="10">{{frame 4 mock}}</text>
+          </svg>
+        </div>
+        <div class="frame-meta"><span class="frame-time">{{end}}</span><span class="frame-label">Hero</span></div>
+        <div class="beat">{{Beat 4: final hero shot / payoff}}</div>
+      </div>
+    </div>
+
+    <div class="prompt-box">
+      <strong>Animation prompt</strong>
+      {{Full descriptive prompt for direction A  -  this is what would drive the build
+       (Hyperframes composition / generative video model / both). Describe the
+       transition story: what happens between frames, mood, motion words, energy.}}
+    </div>
+  </div>
+
+  <!-- ============== DIRECTION B ============== -->
+  <div class="direction">
+    <div class="direction-head">
+      <div class="label">
+        <span class="pill">B</span>
+        <span class="title">{{Direction B title}}</span>
+      </div>
+      <div class="vibe">{{One-line mood for direction B}}</div>
+    </div>
+    <div class="frames">
+      <div class="frame">
+        <div class="frame-canvas"><svg viewBox="0 0 320 180"><text x="160" y="100" text-anchor="middle" fill="var(--muted)" font-size="10">{{B frame 1}}</text></svg></div>
+        <div class="frame-meta"><span class="frame-time">00:00</span><span class="frame-label">Open</span></div>
+        <div class="beat">{{B beat 1}}</div>
+      </div>
+      <div class="frame">
+        <div class="frame-canvas"><svg viewBox="0 0 320 180"><text x="160" y="100" text-anchor="middle" fill="var(--muted)" font-size="10">{{B frame 2}}</text></svg></div>
+        <div class="frame-meta"><span class="frame-time">00:03</span><span class="frame-label">Build</span></div>
+        <div class="beat">{{B beat 2}}</div>
+      </div>
+      <div class="frame">
+        <div class="frame-canvas"><svg viewBox="0 0 320 180"><text x="160" y="100" text-anchor="middle" fill="var(--muted)" font-size="10">{{B frame 3}}</text></svg></div>
+        <div class="frame-meta"><span class="frame-time">00:06</span><span class="frame-label">Develop</span></div>
+        <div class="beat">{{B beat 3}}</div>
+      </div>
+      <div class="frame">
+        <div class="frame-canvas"><svg viewBox="0 0 320 180"><text x="160" y="100" text-anchor="middle" fill="var(--muted)" font-size="10">{{B frame 4}}</text></svg></div>
+        <div class="frame-meta"><span class="frame-time">{{end}}</span><span class="frame-label">Hero</span></div>
+        <div class="beat">{{B beat 4}}</div>
+      </div>
+    </div>
+    <div class="prompt-box">
+      <strong>Animation prompt</strong>
+      {{Full descriptive prompt for direction B}}
+    </div>
+  </div>
+
+  <!-- ============== DIRECTION C ============== -->
+  <div class="direction">
+    <div class="direction-head">
+      <div class="label">
+        <span class="pill">C</span>
+        <span class="title">{{Direction C title}}</span>
+      </div>
+      <div class="vibe">{{One-line mood for direction C}}</div>
+    </div>
+    <div class="frames">
+      <div class="frame">
+        <div class="frame-canvas"><svg viewBox="0 0 320 180"><text x="160" y="100" text-anchor="middle" fill="var(--muted)" font-size="10">{{C frame 1}}</text></svg></div>
+        <div class="frame-meta"><span class="frame-time">00:00</span><span class="frame-label">Open</span></div>
+        <div class="beat">{{C beat 1}}</div>
+      </div>
+      <div class="frame">
+        <div class="frame-canvas"><svg viewBox="0 0 320 180"><text x="160" y="100" text-anchor="middle" fill="var(--muted)" font-size="10">{{C frame 2}}</text></svg></div>
+        <div class="frame-meta"><span class="frame-time">00:03</span><span class="frame-label">Build</span></div>
+        <div class="beat">{{C beat 2}}</div>
+      </div>
+      <div class="frame">
+        <div class="frame-canvas"><svg viewBox="0 0 320 180"><text x="160" y="100" text-anchor="middle" fill="var(--muted)" font-size="10">{{C frame 3}}</text></svg></div>
+        <div class="frame-meta"><span class="frame-time">00:06</span><span class="frame-label">Develop</span></div>
+        <div class="beat">{{C beat 3}}</div>
+      </div>
+      <div class="frame">
+        <div class="frame-canvas"><svg viewBox="0 0 320 180"><text x="160" y="100" text-anchor="middle" fill="var(--muted)" font-size="10">{{C frame 4}}</text></svg></div>
+        <div class="frame-meta"><span class="frame-time">{{end}}</span><span class="frame-label">Hero</span></div>
+        <div class="beat">{{C beat 4}}</div>
+      </div>
+    </div>
+    <div class="prompt-box">
+      <strong>Animation prompt</strong>
+      {{Full descriptive prompt for direction C}}
+    </div>
+  </div>
+
+  <footer>
+    <div class="cost">
+      Per-direction cost: <strong>{{$ amount}}</strong>
+      <span style="opacity: 0.7;"> &middot; {{breakdown}}</span>
+    </div>
+    <div class="cta">
+      Pick <strong>A</strong>, <strong>B</strong>, or <strong>C</strong> &mdash; I'll quote and build.
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

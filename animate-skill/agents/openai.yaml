@@ -1,0 +1,6 @@
+interface:
+  display_name: "Animate"
+  short_description: "Animate overlays on existing videos"
+  default_prompt: "Use $animate to add editable animated overlays to this existing video while preserving its footage and audio."
+policy:
+  allow_implicit_invocation: true
