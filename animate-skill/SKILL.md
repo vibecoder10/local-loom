@@ -9,6 +9,8 @@ Two sources, one skill. The workflow, motion rules, element library and evals co
 
 Principle: every scene is a pure function of scene-local time, so previews, scrubs and renders agree.
 
+**If you got here through Local Loom's Animate button:** the take-package pipeline (`scripts/animate-take.mjs` and the 3 recipes under `templates/`) is fully self-contained in this folder and needs nothing below - see the main repo's `INSTALL-WITH-AI.md` for setup. The "pack" referenced below is a separate, much larger asset library (patterns, 3D, brand demos) used for other kinds of jobs on the original maintainer's own machine; it is **not included in this public copy** and isn't needed for the take-package -> video flow.
+
 ## Where things live
 
 - **This skill:** `~/AgentVault/Skills/Personal/animate/` (linked from `~/.claude/skills/animate` and `~/.codex/skills/animate`).
