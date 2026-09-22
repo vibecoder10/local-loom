@@ -5,15 +5,15 @@ import json
 import zipfile
 
 root = Path(__file__).resolve().parent.parent
-output = root / 'dist/local-loom-community-mac-beta.zip'
-output.parent.mkdir(exist_ok=True)
+output = root / 'local-loom-community-mac-beta.zip'
 # animate-skill/ ships its own scripts (.mjs), sound effects (.wav), fonts (.woff2), license texts (.txt),
 # a shell script and a yaml agent config - widen the allowlist to match, on top of the original extension/
-# companion suffixes.
+# companion/tests suffixes.
 ALLOWED_SUFFIXES = {'.md', '.py', '.js', '.mjs', '.cjs', '.html', '.css', '.json', '.txt', '.wav', '.woff2', '.svg', '.sh', '.yaml'}
-files = [root / 'README.md', root / 'INSTALL-WITH-AI.md', root / 'tools/install-companion.py']
+files = [root / 'README.md', root / 'INSTALL-WITH-AI.md', root / 'package.json', root / 'tools/install-companion.py', root / 'tools/package-community.py']
 files += sorted((root / 'extension').glob('*'))
 files += sorted((root / 'companion').glob('*.py'))
+files += sorted((root / 'tests').glob('*'))
 files += sorted((root / 'animate-skill').rglob('*'))
 with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as archive:
     for file in files:
